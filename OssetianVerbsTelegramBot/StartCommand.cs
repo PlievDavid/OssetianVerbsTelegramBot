@@ -12,7 +12,7 @@ static class StartCommand
             ]);
         if (update != null)
         {
-            await client.SendMessage(update.Message.Chat.Id, "Приветствую вас в боте для изучения осетинского языка!", replyMarkup: keyboard);
+            await client.SendMessage(update.Message.Chat.Id, "Приветствую вас в боте для изучения осетинского языка!", replyMarkup: inlineKeyboard);
 
             if (update.CallbackQuery != null)
             {
