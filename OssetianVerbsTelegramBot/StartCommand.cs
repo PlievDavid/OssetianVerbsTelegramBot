@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 static class StartCommand
 {
@@ -7,11 +8,7 @@ static class StartCommand
     {
         if (update != null)
         {
-            await client.SendMessage(update.Message.Chat.Id, "ммм", replyMarkup: new string[][]
-            {
-                    new string[]{"привет", "gdf"},
-                    new string[]{"ммм" } 
-            });
+            await client.SendMessage(update.Message.Chat.Id, "ммм", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[] {"1", "2"}));
         }
     }
 }
