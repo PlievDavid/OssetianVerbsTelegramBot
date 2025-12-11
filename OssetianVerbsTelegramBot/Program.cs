@@ -27,18 +27,21 @@ internal class Program
     private static async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
     {
         var message = update.Message;
+        Console.WriteLine($"Получено обновление: {update.Id}, Type: {update.Type}");
         if (message != null)
         {
-            await client.SendMessage(message.Chat.Id, message.Text, replyMarkup: new ReplyKeyboardRemove());
-
-
             if (message.Text.StartsWith("/start"))
+            {
                 await StartCommand.ExecuteAsync(client, update);
-        }
-
-        if (update.CallbackQuery != null)
-        {
-            await StartCommand.HandleCallbackQueryAsync(client, update.CallbackQuery);
+            }
+            else if (message.Text.StartsWith("Начать учиться", StringComparison.OrdinalIgnoreCase))
+            {
+                await LearnCommand.ExecuteAsync(client, update);
+            }
+            else if (message.Text.StartsWith("Статистика", StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowStatisticsCommand.ExecuteAsync(client, update);
+            }
         }
     }
 

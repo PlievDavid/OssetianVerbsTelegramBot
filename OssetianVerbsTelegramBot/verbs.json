@@ -1,0 +1,239 @@
+﻿{
+  "verbs": [
+    {
+      "type": "1",
+      "present": "кæнын",
+      "past_participle": "кодтон"
+    },
+    {
+      "type": "1",
+      "present": "хæрын",
+      "past_participle": "хордтон"
+    },
+    {
+      "type": "1",
+      "present": "уарзын",
+      "past_participle": "уарзтон"
+    },
+    {
+      "type": "1",
+      "present": "дзурын",
+      "past_participle": "дзырдтон"
+    },
+    {
+      "type": "1",
+      "present": "кусын",
+      "past_participle": "куыстон"
+    },
+    {
+      "type": "1",
+      "present": "хъусын",
+      "past_participle": "хъуыстон"
+    },
+    {
+      "type": "1",
+      "present": "фыссын",
+      "past_participle": "фыстон"
+    },
+    {
+      "type": "1",
+      "present": "зонын",
+      "past_participle": "зыдтон"
+    },
+    {
+      "type": "1",
+      "present": "фидын",
+      "past_participle": "фыстон"
+    },
+    {
+      "type": "1",
+      "present": "æлхæнын",
+      "past_participle": "æлхæдтон"
+    },
+    {
+      "type": "1",
+      "present": "архайын",
+      "past_participle": "архайдтон"
+    },
+    {
+      "type": "1",
+      "present": "исын",
+      "past_participle": "истон"
+    },
+    {
+      "type": "1",
+      "present": "райсын",
+      "past_participle": "райстон"
+    },
+    {
+      "type": "1",
+      "present": "дæттын",
+      "past_participle": "лæвæрдтон"
+    },
+    {
+      "type": "1",
+      "present": "раттын",
+      "past_participle": "радтон"
+    },
+    {
+      "type": "1",
+      "present": "райдайын",
+      "past_participle": "райдыдтон"
+    },
+    {
+      "type": "1",
+      "present": "байдайын",
+      "past_participle": "байдыдтон"
+    },
+    {
+      "type": "1",
+      "present": "агурын",
+      "past_participle": "агуырдтон"
+    },
+    {
+      "type": "1",
+      "present": "ссарын",
+      "past_participle": "ссардтон"
+    },
+    {
+      "type": "1",
+      "present": "ахсын",
+      "past_participle": "ахстон"
+    },
+    {
+      "type": "1",
+      "present": "хæссын",
+      "past_participle": "хастон"
+    },
+    {
+      "type": "1",
+      "present": "фæлварын",
+      "past_participle": "фæлвæрдтон"
+    },
+    {
+      "type": "1",
+      "present": "аразын",
+      "past_participle": "арæзтон"
+    },
+    {
+      "type": "1",
+      "present": "æвдисын",
+      "past_participle": "æвдыстон"
+    },
+    {
+      "type": "1",
+      "present": "æмбæхсын",
+      "past_participle": "æмбæхстон"
+    },
+    {
+      "type": "1",
+      "present": "æрвитын",
+      "past_participle": "æрвыстон"
+    },
+    {
+      "type": "1",
+      "present": "ласын",
+      "past_participle": "ластон"
+    },
+    {
+      "type": "1",
+      "present": "æвзарын",
+      "past_participle": "æвзæрстон"
+    },
+    {
+      "type": "1",
+      "present": "уадзын",
+      "past_participle": "уагътон"
+    },
+    {
+      "type": "1",
+      "present": "æхгæнын",
+      "past_participle": "æхгæдтон"
+    },
+    {
+      "type": "1",
+      "present": "хъыгдарын",
+      "past_participle": "хъыгдæрдтон"
+    },
+    {
+      "type": "1",
+      "present": "æппарын",
+      "past_participle": "æппæрстон"
+    },
+    {
+      "type": "1",
+      "present": "амонын",
+      "past_participle": "амыдтон"
+    },
+    {
+      "type": "2",
+      "present": "уӕвын",
+      "past_participle": "уыдтӕн"
+    },
+    {
+      "type": "2",
+      "present": "цæуын",
+      "past_participle": "цыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "кæсын",
+      "past_participle": "кастæн"
+    },
+    {
+      "type": "2",
+      "present": "лæууын",
+      "past_participle": "лæууыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "бадын",
+      "past_participle": "бадтæн"
+    },
+    {
+      "type": "2",
+      "present": "хуыссын",
+      "past_participle": "хуыссыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "улæфын",
+      "past_participle": "улæфыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "тæхын",
+      "past_participle": "тахтæн"
+    },
+    {
+      "type": "2",
+      "present": "лидзын",
+      "past_participle": "лыгътæн"
+    },
+    {
+      "type": "2",
+      "present": "æмбæлын",
+      "past_participle": "æмбæлыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "баззайын",
+      "past_participle": "баззадтæн"
+    },
+    {
+      "type": "2",
+      "present": "зарын",
+      "past_participle": "зарыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "кафын",
+      "past_participle": "кафыдтæн"
+    },
+    {
+      "type": "2",
+      "present": "хъазын",
+      "past_participle": "хъазыдтæн"
+    }
+  ]
+}
