@@ -1,7 +1,11 @@
-﻿using Telegram.Bot;
+﻿using DotNetEnv;
+using Microsoft.Data.Sqlite;
+using OssetianVerbsTelegramBot;
+using System.Collections.Generic;
+using System.Net.NetworkInformation;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using DotNetEnv;
 
 internal class Program
 {
@@ -17,7 +21,6 @@ internal class Program
 
         await Task.Delay(-1);
     }
-
     private static async Task ErrorHandler(ITelegramBotClient client, Exception exception, HandleErrorSource source, CancellationToken token)
     {
        

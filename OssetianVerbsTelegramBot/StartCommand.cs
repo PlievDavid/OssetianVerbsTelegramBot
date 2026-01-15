@@ -10,5 +10,6 @@ static class StartCommand
         {
             await client.SendMessage(update.Message.Chat.Id, "ммм", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[] {"1", "2"}));
         }
+
     }
 }
