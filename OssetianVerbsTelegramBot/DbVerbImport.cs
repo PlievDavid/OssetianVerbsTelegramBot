@@ -13,7 +13,7 @@ namespace OssetianVerbsTelegramBot
         public static List<Verb> GetAllVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs";
@@ -30,7 +30,7 @@ namespace OssetianVerbsTelegramBot
         public static List<Verb> GetAllFirstTypeVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs WHERE Type = 1";
@@ -47,7 +47,7 @@ namespace OssetianVerbsTelegramBot
         public static List<Verb> GetAllSecondTypeVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs WHERE Type = 2";
