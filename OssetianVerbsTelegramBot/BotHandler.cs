@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OssetianVerbsTelegramBot.DefineTypeTask;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace OssetianVerbsTelegramBot
     public class BotHandler
     {
         private readonly TelegramBotClient _bot;
-        private TaskDefineType _taskDefineType;
+        private static Dictionary<long, TestSession> Sessions = new();
 
         public BotHandler(string token)
         {
@@ -49,10 +50,11 @@ namespace OssetianVerbsTelegramBot
             switch (message.Text)
             {
                 case "/start":
+                    SendMainMenu(message.Chat.Id);
                     break;
                 case "📋 Определить тип":
-                    _taskDefineType = new TaskDefineType(message.Chat.Id);
-                    await StartTask(_taskDefineType);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, DbVerbImport.GetRandomListVerb());
+                    await SendVerb(message.Chat.Id);
                     break;
                 default:
                     await SendMainMenu(message.Chat.Id);
@@ -60,51 +62,57 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
-        private async Task StartTask(TaskDefineType task)
-        {
-            SendNextQuestion(task);
-        }
 
-        private async Task SendNextQuestion(TaskDefineType task)
+        private async Task SendVerb(long chatId)
         {
+            var session = Sessions[chatId];
+            var verb = session.Verbs[session.CurrentIndex];
+
             var keyboard = new InlineKeyboardMarkup(new[]
             {
-                new[]{new InlineKeyboardButton("Первый тип", "firstType")},
-                new[]{new InlineKeyboardButton("Второй тип", "secondType")}
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Тип 1", "answer_1"),
+                    InlineKeyboardButton.WithCallbackData("Тип 2", "answer_2")
+                }
             });
-            var verb = task.NextQuestion();
 
-            var msg = $"""
-                Глагол:
-                ${verb.Inf}
-                """;
-
+            Console.WriteLine($"{verb.Inf} {verb.Type}");
             await _bot.SendMessage(
-               chatId: task.UserId,
-               text: msg,
-               replyMarkup: keyboard
-           );
-
+                chatId,
+                $"Слово {session.CurrentIndex + 1}/10:\n\n{verb.Inf}",
+                replyMarkup: keyboard
+            );
         }
 
-        private async Task ProcessAnswer(CallbackQuery callbackQuery, int ans)
-        {
-            Console.WriteLine(callbackQuery.Message.Text);
-            if (_taskDefineType.VerbIndex >= 9)
-                SendMainMenu(callbackQuery.Message.Chat.Id);
-            SendNextQuestion(_taskDefineType);
-        }
 
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
-            switch (callbackQuery.Data)
+            if (callbackQuery.Data.StartsWith("answer_"))
             {
-                case "firstType":
-                    await ProcessAnswer(callbackQuery,1); ;
-                    break;
-                case "secondType":
-                    await ProcessAnswer(callbackQuery, 2); ;
-                    break;
+                var chatId = callbackQuery.Message.Chat.Id;
+                int answer = int.Parse(callbackQuery.Data.Split('_')[1]);
+                var session = Sessions[chatId];
+                var verb = session.Verbs[session.CurrentIndex];
+
+                if (answer == verb.Type)
+                    session.Score++;
+
+                session.CurrentIndex++;
+
+                if (session.CurrentIndex < session.Verbs.Count)
+                {
+                    SendVerb(chatId);
+                }
+                else
+                {
+                    await _bot.SendMessage(
+                        chatId,
+                        $"Тест завершён!\nРезультат: {session.Score}/10"
+                    );
+
+                    Sessions.Remove(chatId);
+                }
             }
         }
 
