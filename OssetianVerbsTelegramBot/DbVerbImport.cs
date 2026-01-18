@@ -76,5 +76,24 @@ namespace OssetianVerbsTelegramBot
             var verbs = GetAllSecondTypeVerbs();
             return verbs[rnd.Next(0, verbs.Count)];
         }
+
+        public static List<Verb> GetRandomListVerb(int count = 10)
+        {
+            var list = new List<Verb>();
+            for (int i = 0; i < count; i++)
+            {
+                var verb = GetRandomVerb();
+                if (list.Any(x => x.Inf == verb.Inf))
+                {
+                    if (count > GetAllVerbs().Count)
+                        return list;
+                    else
+                        i--;
+                }
+                else
+                    list.Add(GetRandomVerb());
+            }
+            return list;
+        }
     }
 }

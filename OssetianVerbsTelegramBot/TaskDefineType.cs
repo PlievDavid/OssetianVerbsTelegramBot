@@ -8,14 +8,16 @@ namespace OssetianVerbsTelegramBot
 {
     public class TaskDefineType
     {
-        private readonly HashSet<Verb> _verbs;
-        public TaskDefineType()
+        public long UserId { get; }
+        public Verb Verb { get; set; }
+        public int VerbIndex { get; private set; }
+
+
+        private readonly List<Verb> _verbs;
+        public TaskDefineType(long userId)
         {
-            _verbs = new HashSet<Verb>();
-            while (_verbs.Count != 10)
-            {
-                _verbs.Add(DbVerbImport.GetRandomVerb());
-            }
+            UserId = userId;
+            _verbs = DbVerbImport.GetRandomListVerb();
         }
 
         public Verb NextQuestion()
@@ -24,9 +26,16 @@ namespace OssetianVerbsTelegramBot
             if(verb != null)
             {
                 _verbs.Remove(verb);
+                IncreaseVerbIndex();
             }
+            Verb = verb;
             return verb;
             
+        }
+
+        public void IncreaseVerbIndex()
+        {
+            VerbIndex++;
         }
 
 

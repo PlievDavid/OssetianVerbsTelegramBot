@@ -13,11 +13,11 @@ namespace OssetianVerbsTelegramBot
     public class BotHandler
     {
         private readonly TelegramBotClient _bot;
+        private TaskDefineType _taskDefineType;
 
         public BotHandler(string token)
         {
             _bot = new TelegramBotClient(token);
-
         }
 
         public async Task Start()
@@ -38,10 +38,10 @@ namespace OssetianVerbsTelegramBot
                     await HandleMessage(message);
                 }
             }
-            //else if (update.Type == UpdateType.CallbackQuery)
-            //{
-            //    await HandleCallbackQuery(update.CallbackQuery);
-            //}
+            else if (update.Type == UpdateType.CallbackQuery)
+            {
+                await HandleCallbackQuery(update.CallbackQuery);
+            }
         }
 
         private async Task HandleMessage(Message message)
@@ -51,8 +51,8 @@ namespace OssetianVerbsTelegramBot
                 case "/start":
                     break;
                 case "📋 Определить тип":
-                    var task = new TaskDefineType();
-                    await SendTask1Question(message.Chat.Id, task);
+                    _taskDefineType = new TaskDefineType(message.Chat.Id);
+                    await StartTask(_taskDefineType);
                     break;
                 default:
                     await SendMainMenu(message.Chat.Id);
@@ -60,20 +60,53 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
-        //private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
-        //{
-        //    switch (callbackQuery.Data)
-        //    {
-        //        case "option1":
-        //            await _bot.AnswerCallbackQuery(callbackQuery.Id, "Вы выбрали пункт 1");
-        //            await _bot.SendMessage(callbackQuery.Message.Chat.Id, "Вы выбрали: Пункт 1");
-        //            break;
-        //        case "option2":
-        //            await _bot.AnswerCallbackQuery(callbackQuery.Id, "Вы выбрали пункт 2");
-        //            await _bot.SendMessage(callbackQuery.Message.Chat.Id, "Вы выбрали: Пункт 2");
-        //            break;
-        //    }
-        //}
+        private async Task StartTask(TaskDefineType task)
+        {
+            SendNextQuestion(task);
+        }
+
+        private async Task SendNextQuestion(TaskDefineType task)
+        {
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[]{new InlineKeyboardButton("Первый тип", "firstType")},
+                new[]{new InlineKeyboardButton("Второй тип", "secondType")}
+            });
+            var verb = task.NextQuestion();
+
+            var msg = $"""
+                Глагол:
+                ${verb.Inf}
+                """;
+
+            await _bot.SendMessage(
+               chatId: task.UserId,
+               text: msg,
+               replyMarkup: keyboard
+           );
+
+        }
+
+        private async Task ProcessAnswer(CallbackQuery callbackQuery, int ans)
+        {
+            Console.WriteLine(callbackQuery.Message.Text);
+            if (_taskDefineType.VerbIndex >= 9)
+                SendMainMenu(callbackQuery.Message.Chat.Id);
+            SendNextQuestion(_taskDefineType);
+        }
+
+        private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
+        {
+            switch (callbackQuery.Data)
+            {
+                case "firstType":
+                    await ProcessAnswer(callbackQuery,1); ;
+                    break;
+                case "secondType":
+                    await ProcessAnswer(callbackQuery, 2); ;
+                    break;
+            }
+        }
 
         private async Task SendMainMenu(long chatId)
         {
@@ -83,11 +116,6 @@ namespace OssetianVerbsTelegramBot
                 {
                     new KeyboardButton("📋 Определить тип"),
                     new KeyboardButton("🖋️ Перевести")
-                },
-                new[]
-                {
-                    new KeyboardButton("📞 Контакты"),
-                    new KeyboardButton("ℹ️ О нас")
                 },
                 new[]
                 {
@@ -103,23 +131,7 @@ namespace OssetianVerbsTelegramBot
         }
 
 
-        private async Task SendTask1Question(long chatId, TaskDefineType task)
-        {
-            var verb = task.NextQuestion();
-            while (verb != null)
-            {
-                var msg = $"""
-                Глагол:
-                ${verb.Inf}
-                """;
 
-                await _bot.SendMessage(
-                   chatId: chatId,
-                   text: "Навигация осуществляется с помощью меню👇",
-                   replyMarkup: keyboard
-               );
-            }
-        }
 
 
         private Task ErrorHandler(ITelegramBotClient bot, Exception exception, CancellationToken ct)
