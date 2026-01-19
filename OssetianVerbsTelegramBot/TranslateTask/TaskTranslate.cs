@@ -37,7 +37,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             var verb = session.Verbs[session.CurrentIndexTranslateTask];
             var wrongVerb = await DbVerbImport.GetRandomVerb();
 
-            var twoVerbs = new List<Verb> { verb, await wrongVerb };
+            var twoVerbs = new List<Verb> { verb, wrongVerb };
             int randomNum = rnd.Next(1, 25) % 2;
             InlineKeyboardMarkup answers =
                 new InlineKeyboardMarkup(
