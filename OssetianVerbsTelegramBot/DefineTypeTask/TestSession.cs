@@ -8,6 +8,9 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
 {
     class TestSession
     {
+        private long id;
+        private Task<List<Verb>> task;
+
         public long UserId { get; set; }
         public List<Verb> Verbs { get; private set; }
         public int CurrentIndex { get; set; } = 0;
@@ -22,5 +25,10 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             Verbs = verbs;
         }
 
+        public TestSession(long id, Task<List<Verb>> task)
+        {
+            this.id = id;
+            this.task = task;
+        }
     }
 }
