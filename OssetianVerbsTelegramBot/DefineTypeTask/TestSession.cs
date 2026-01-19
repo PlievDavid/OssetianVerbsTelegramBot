@@ -6,29 +6,24 @@ using System.Threading.Tasks;
 
 namespace OssetianVerbsTelegramBot.DefineTypeTask
 {
-    class TestSession
+    public class TestSession
     {
-        private long id;
-        private Task<List<Verb>> task;
 
         public long UserId { get; set; }
         public List<Verb> Verbs { get; private set; }
         public int CurrentIndex { get; set; } = 0;
         public int Score { get; set; } = 0;
+        public ITaskHelper Task { get; set; }
 
         public int CurrentIndexTranslateTask { get; set; } = 0;
         public int ScoreTranslateTask { get; set; } = 0;
 
-        public TestSession(long userId, List<Verb> verbs)
+        public TestSession(long userId, List<Verb> verbs, ITaskHelper task)
         {
             UserId = userId;
             Verbs = verbs;
+            Task = task;
         }
 
-        public TestSession(long id, Task<List<Verb>> task)
-        {
-            this.id = id;
-            this.task = task;
-        }
     }
 }

@@ -6,7 +6,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.TranslateTask
 {
-    internal class TaskTranslate
+    internal class TaskTranslate: ITaskHelper
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
@@ -17,13 +17,13 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             _sessions = sessions;
             _bot = bot;
         }
-        public async Task StartTranslateTask(Message message)
+        public async Task StartTask(Message message)
         {
             var chatId = message.Chat.Id;
 
             var session = _sessions[chatId];
 
-            SendNextQuestion(chatId, session);
+           await SendNextQuestion(chatId, session);
         }
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
@@ -48,7 +48,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             await _bot.SendMessage(chatId, $"№{session.CurrentIndexTranslateTask + 1}/10 Переведите слово: {verb.Inf} - {verb.Trans}", replyMarkup: answers);
         }
 
-        internal async Task HandleCallbackQuery(CallbackQuery callbackQuery)
+        public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             var chatId = callbackQuery.Message.Chat.Id;
 

@@ -54,20 +54,19 @@ namespace OssetianVerbsTelegramBot
                     await DbUser.InitialiseUser(message);
                     await SendMainMenu(message.Chat.Id);
                     break;
+
                 case "📋 Определить тип":
-                    var list = await DbVerbImport.GetRandomListVerb();
-                    foreach (var item in list)
-                    {
-                        Console.WriteLine(item.Inf);
-                    }
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, list);
-                    await SendVerb(message.Chat.Id);
+                    ITaskHelper taskDefineType = new TaskDefineType(_bot, Sessions);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(),taskDefineType);
+                    await taskDefineType.StartTask(message);
                     break;
+
                 case "🖋️ Перевести":
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb());
-                    TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
-                    await taskTranslate.StartTranslateTask(message);
+                    ITaskHelper taskTranslate = new TaskTranslate(_bot, Sessions);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(), taskTranslate);
+                    await taskTranslate.StartTask(message);
                     break;
+
                 case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
                     break;
@@ -88,32 +87,6 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(id, textStatistics);
         }
 
-        private async Task SendVerb(long chatId)
-        {
-            var session = Sessions[chatId];
-            var verb = session.Verbs[session.CurrentIndex];
-            Console.WriteLine(session.CurrentIndex);
-            foreach (var item in session.Verbs)
-            {
-                Console.Write(item.Inf + " ");
-            }
-            Console.WriteLine(session.CurrentIndex);
-            var keyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Тип 1", "answer_1"),
-                    InlineKeyboardButton.WithCallbackData("Тип 2", "answer_2")
-                }
-            });
-
-            Console.WriteLine($"{verb.Inf} {verb.Type}");
-            await _bot.SendMessage(
-                chatId,
-                $"Слово {session.CurrentIndex + 1}/10:\n\n{verb.Inf}",
-                replyMarkup: keyboard
-            );
-        }
 
 
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -122,47 +95,13 @@ namespace OssetianVerbsTelegramBot
 
             if (callbackQuery.Data.StartsWith("answer_"))
             {
-                var chatId = callbackQuery.Message.Chat.Id;
-                int answer = int.Parse(callbackQuery.Data.Split('_')[1]);
-                var session = Sessions[chatId];
-                var verb = session.Verbs[session.CurrentIndex];
-
-                if (answer == verb.Type)
-                {
-                    session.Score++;
-                    await _bot.SendMessage(
-                       chatId,
-                       $"Правильный ответ!✅"
-                   );
-                }
-                else
-                {
-                    await _bot.SendMessage(
-                       chatId,
-                       $"Неправильный ответ!❌"
-                   );
-                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf);
-                }
-
-                session.CurrentIndex++;
-
-                if (session.CurrentIndex < session.Verbs.Count)
-                {
-                    await SendVerb(chatId);
-                }
-                else
-                {
-                    await _bot.SendMessage(
-                        chatId,
-                        $"Тест завершён!\nРезультат: {session.Score}/10"
-                    );
-
-                    Sessions.Remove(chatId);
-                }
+                var task = Sessions[callbackQuery.Message.Chat.Id].Task;
+                await task.HandleCallbackQuery(callbackQuery);
             }
+
             else
             {
-                TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
+                var taskTranslate = Sessions[callbackQuery.Message.Chat.Id].Task;
                 await taskTranslate.HandleCallbackQuery(callbackQuery);
             }
         }
@@ -171,7 +110,7 @@ namespace OssetianVerbsTelegramBot
         private async Task SendMainMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]
-            {
+            { 
                 new[]
                 {
                     new KeyboardButton("📋 Определить тип"),
@@ -186,11 +125,8 @@ namespace OssetianVerbsTelegramBot
                 ResizeKeyboard = true
             };
 
-            await _bot.SendMessage(
-                chatId: chatId,
-                text: "Навигация осуществляется с помощью меню👇",
-                replyMarkup: keyboard
-            );
+            await _bot.SendMessage(chatId: chatId,
+                text: "Навигация осуществляется с помощью меню👇",  replyMarkup: keyboard  );
         }
 
 
