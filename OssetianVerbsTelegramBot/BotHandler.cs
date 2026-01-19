@@ -66,7 +66,7 @@ namespace OssetianVerbsTelegramBot
                 case "🖋️ Перевести":
                     Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb());
                     TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
-                    taskTranslate.StartTranslateTask(message);
+                    await taskTranslate.StartTranslateTask(message);
                     break;
                 case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
