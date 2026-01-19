@@ -12,7 +12,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var botHandler = new BotHandler("7626167004:AAGqtnedZQwSOz9uNKfvkmp4K_B9ZPhDyoQ");
+        var botHandler = new BotHandler(GetBotToken());
         await botHandler.Start();
 
     }
@@ -20,11 +20,7 @@ internal class Program
 
     public static string GetBotToken()
     {
-        var token = "8293586184:AAGe - gzjBpALyPFX06w4quwmqUSxnuLj8kI";
-        if (token != null)
-        {
-            return token;
-        }
+        string token = "";
 
         if (File.Exists(".env"))
         {

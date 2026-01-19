@@ -1,4 +1,5 @@
 ﻿using OssetianVerbsTelegramBot.DefineTypeTask;
+using OssetianVerbsTelegramBot.TranslateTask;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,11 +51,16 @@ namespace OssetianVerbsTelegramBot
             switch (message.Text)
             {
                 case "/start":
-                    SendMainMenu(message.Chat.Id);
+                    await SendMainMenu(message.Chat.Id);
                     break;
                 case "📋 Определить тип":
                     Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, DbVerbImport.GetRandomListVerb());
                     await SendVerb(message.Chat.Id);
+                    break;
+                case "🖋️ Перевести":
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, DbVerbImport.GetRandomListVerb());
+                    TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
+                    taskTranslate.StartTranslateTask(message);
                     break;
                 default:
                     await SendMainMenu(message.Chat.Id);
@@ -88,6 +94,8 @@ namespace OssetianVerbsTelegramBot
 
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
+            await _bot.AnswerCallbackQuery(callbackQuery.Id);
+
             if (callbackQuery.Data.StartsWith("answer_"))
             {
                 var chatId = callbackQuery.Message.Chat.Id;
@@ -102,7 +110,7 @@ namespace OssetianVerbsTelegramBot
 
                 if (session.CurrentIndex < session.Verbs.Count)
                 {
-                    SendVerb(chatId);
+                    await SendVerb(chatId);
                 }
                 else
                 {
@@ -113,6 +121,11 @@ namespace OssetianVerbsTelegramBot
 
                     Sessions.Remove(chatId);
                 }
+            }
+            else
+            {
+                TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
+                await taskTranslate.HandleCallbackQuery(callbackQuery);
             }
         }
 
@@ -129,7 +142,10 @@ namespace OssetianVerbsTelegramBot
                 {
                     new KeyboardButton("⚙️ Статистика")
                 }
-            });
+            })
+            {
+                ResizeKeyboard = true
+            };
 
             await _bot.SendMessage(
                 chatId: chatId,
