@@ -107,9 +107,21 @@ namespace OssetianVerbsTelegramBot
                 var verb = session.Verbs[session.CurrentIndex];
 
                 if (answer == verb.Type)
+                {
                     session.Score++;
+                    await _bot.SendMessage(
+                       chatId,
+                       $"Правильный ответ!✅"
+                   );
+                }
                 else
+                {
+                    await _bot.SendMessage(
+                       chatId,
+                       $"Неправильный ответ!❌"
+                   );
                     await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf);
+                }
 
                     session.CurrentIndex++;
 
@@ -128,6 +140,7 @@ namespace OssetianVerbsTelegramBot
                 }
             }
         }
+
 
         private async Task SendMainMenu(long chatId)
         {
