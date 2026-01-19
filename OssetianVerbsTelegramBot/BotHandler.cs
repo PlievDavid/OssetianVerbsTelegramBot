@@ -64,7 +64,7 @@ namespace OssetianVerbsTelegramBot
                     await SendVerb(message.Chat.Id);
                     break;
                 case "🖋️ Перевести":
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, DbVerbImport.GetRandomListVerb());
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb());
                     TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
                     taskTranslate.StartTranslateTask(message);
                     break;
@@ -79,7 +79,7 @@ namespace OssetianVerbsTelegramBot
 
         private async Task SendStatistics(long id)
         {
-            var list = DbUser.GetUserStatById(id.ToString());
+            var list = await DbUser.GetUserStatById(id.ToString());
             string textStatistics = "Статистика ошибок: \n";
             foreach (var stat in await list)
             {
@@ -95,7 +95,7 @@ namespace OssetianVerbsTelegramBot
             Console.WriteLine(session.CurrentIndex);
             foreach (var item in session.Verbs)
             {
-                Console.Write(item.Inf+" ");
+                Console.Write(item.Inf + " ");
             }
             Console.WriteLine(session.CurrentIndex);
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -144,7 +144,7 @@ namespace OssetianVerbsTelegramBot
                     await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf);
                 }
 
-                    session.CurrentIndex++;
+                session.CurrentIndex++;
 
                 if (session.CurrentIndex < session.Verbs.Count)
                 {
