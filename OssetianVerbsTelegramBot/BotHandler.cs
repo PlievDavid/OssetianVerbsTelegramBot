@@ -74,10 +74,12 @@ namespace OssetianVerbsTelegramBot
         private async Task SendStatistics(long id)
         {
             var list = DbUser.GetUserStatById(id.ToString());
+            string textStatistics = "Статистика ошибок: \n";
             foreach (var stat in list)
             {
-                await _bot.SendMessage(id, stat.ToString());
+                textStatistics += stat.ToString() + "\n";
             }
+            await _bot.SendMessage(id, textStatistics);
         }
 
         private async Task SendVerb(long chatId)
