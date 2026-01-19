@@ -28,7 +28,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
             
-            if (session.CurrentIndex > session.Verbs.Count-1)
+            if (session.CurrentIndexTranslateTask > session.Verbs.Count-1)
             {
                 await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.ScoreTranslateTask}/10");
                 return;
@@ -62,6 +62,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             else
             {
                 await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndexTranslateTask].Trans);
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf);
             }
 
             session.CurrentIndexTranslateTask++;

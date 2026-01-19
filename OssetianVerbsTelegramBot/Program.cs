@@ -12,7 +12,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var botHandler = new BotHandler("7626167004:AAGqtnedZQwSOz9uNKfvkmp4K_B9ZPhDyoQ");
+        var botHandler = new BotHandler(GetBotToken());
         await botHandler.Start();
 
     }
