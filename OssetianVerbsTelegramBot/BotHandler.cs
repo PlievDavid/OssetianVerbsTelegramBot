@@ -62,12 +62,23 @@ namespace OssetianVerbsTelegramBot
                     TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
                     taskTranslate.StartTranslateTask(message);
                     break;
+                case "🖋️ Статистика":
+                    await SendStatistics(message.Chat.Id);
+                    break;
                 default:
                     await SendMainMenu(message.Chat.Id);
                     break;
             }
         }
 
+        private async Task SendStatistics(long id)
+        {
+            var list = DbUser.GetUserStatById(id.ToString());
+            foreach (var stat in list)
+            {
+                await _bot.SendMessage(id, stat.ToString());
+            }
+        }
 
         private async Task SendVerb(long chatId)
         {
