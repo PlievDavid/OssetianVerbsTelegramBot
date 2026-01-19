@@ -10,7 +10,7 @@ namespace OssetianVerbsTelegramBot
     public static class DbVerbImport
     {
         static Random rnd = new Random();
-        public static List<Verb> GetAllVerbs()
+        public static async Task<List<Verb>> GetAllVerbs()
         {
             var ans = new List<Verb> { };
             using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
@@ -27,7 +27,7 @@ namespace OssetianVerbsTelegramBot
             }
             return ans;
         }
-        public static List<Verb> GetAllFirstTypeVerbs()
+        public static async Task<List<Verb>> GetAllFirstTypeVerbs()
         {
             var ans = new List<Verb> { };
             using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
@@ -44,7 +44,7 @@ namespace OssetianVerbsTelegramBot
             }
             return ans;
         }
-        public static List<Verb> GetAllSecondTypeVerbs()
+        public static async Task<List<Verb>> GetAllSecondTypeVerbs()
         {
             var ans = new List<Verb> { };
             using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
@@ -61,20 +61,41 @@ namespace OssetianVerbsTelegramBot
             }
             return ans;
         }
-        public static Verb GetRandomVerb()
+        public static async Task<Verb> GetRandomVerb()
         {
-            var verbs = GetAllVerbs();
+            var verbs = await GetAllVerbs();
             return verbs[rnd.Next(0, verbs.Count)];
         }
-        public static Verb GetRandomFirstTypeVerb()
+        public static async Task<Verb> GetRandomFirstTypeVerb()
         {
-            var verbs = GetAllFirstTypeVerbs();
+            var verbs = await GetAllFirstTypeVerbs();
             return verbs[rnd.Next(0, verbs.Count)];
         }
-        public static Verb GetRandomSecondTypeVerb()
+        public static async Task<Verb> GetRandomSecondTypeVerb()
         {
-            var verbs = GetAllSecondTypeVerbs();
+            var verbs = await GetAllSecondTypeVerbs();
             return verbs[rnd.Next(0, verbs.Count)];
+        }
+
+        public static async Task<List<Verb>> GetRandomListVerb(int count = 10)
+        {
+            var all = await GetAllVerbs();
+            var allCount = all.Count;
+            var list = new List<Verb>();
+            for (int i = 0; i < count; i++)
+            {
+                var verb = await GetRandomVerb();
+                if (list.Any(x => x.Inf == verb.Inf))
+                {
+                    if (count > allCount)
+                        return list;
+                    else
+                        i--;
+                }
+                else
+                    list.Add(verb);
+            }
+            return list;
         }
     }
 }
