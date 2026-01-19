@@ -1,5 +1,6 @@
 # Telegram-бот для закрепления осетинских глаголов.
 ## Об осетинских глаголах.
+Презентация: https://docs.google.com/presentation/d/1aaOQV-GCOWlnCFjDTMzKlQXngOA3kkIM7vm5rvljzzc/edit?usp=sharing
 В осетинском языке глаголы делятся на два типа. Тип глагола определяет правила его склонения. Пример:
 ![oset-verbs-types](https://github.com/user-attachments/assets/3735e853-ee54-46d0-9a88-b96b72a2dadc)
 Часто при склонении меняетя основа инфинитива глагола. Например: дз***у***рын - дз***ы***рдтон.
