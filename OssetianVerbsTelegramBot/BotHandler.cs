@@ -68,7 +68,7 @@ namespace OssetianVerbsTelegramBot
                     TaskTranslate taskTranslate = new TaskTranslate(_bot, Sessions);
                     taskTranslate.StartTranslateTask(message);
                     break;
-                case "🖋️ Статистика":
+                case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
                     break;
                 default:
@@ -81,7 +81,7 @@ namespace OssetianVerbsTelegramBot
         {
             var list = DbUser.GetUserStatById(id.ToString());
             string textStatistics = "Статистика ошибок: \n";
-            foreach (var stat in list)
+            foreach (var stat in await list)
             {
                 textStatistics += stat.ToString() + "\n";
             }
