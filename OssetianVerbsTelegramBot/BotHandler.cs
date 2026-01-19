@@ -81,7 +81,7 @@ namespace OssetianVerbsTelegramBot
         {
             var list = await DbUser.GetUserStatById(id.ToString());
             string textStatistics = "Статистика ошибок: \n";
-            foreach (var stat in await list)
+            foreach (var stat in list)
             {
                 textStatistics += stat.ToString() + "\n";
             }
