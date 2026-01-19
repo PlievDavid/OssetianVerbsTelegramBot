@@ -50,10 +50,16 @@ namespace OssetianVerbsTelegramBot
             switch (message.Text)
             {
                 case "/start":
-                    SendMainMenu(message.Chat.Id);
+                    await DbUser.InitialiseUser(message);
+                    await SendMainMenu(message.Chat.Id);
                     break;
                 case "📋 Определить тип":
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, DbVerbImport.GetRandomListVerb());
+                    var list = await DbVerbImport.GetRandomListVerb();
+                    foreach (var item in list)
+                    {
+                        Console.WriteLine(item.Inf);
+                    }
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, list);
                     await SendVerb(message.Chat.Id);
                     break;
                 default:
@@ -67,7 +73,12 @@ namespace OssetianVerbsTelegramBot
         {
             var session = Sessions[chatId];
             var verb = session.Verbs[session.CurrentIndex];
-
+            Console.WriteLine(session.CurrentIndex);
+            foreach (var item in session.Verbs)
+            {
+                Console.Write(item.Inf+" ");
+            }
+            Console.WriteLine(session.CurrentIndex);
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
@@ -97,12 +108,14 @@ namespace OssetianVerbsTelegramBot
 
                 if (answer == verb.Type)
                     session.Score++;
+                else
+                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf);
 
-                session.CurrentIndex++;
+                    session.CurrentIndex++;
 
                 if (session.CurrentIndex < session.Verbs.Count)
                 {
-                    SendVerb(chatId);
+                    await SendVerb(chatId);
                 }
                 else
                 {

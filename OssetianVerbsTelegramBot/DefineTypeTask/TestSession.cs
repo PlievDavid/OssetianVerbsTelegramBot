@@ -19,11 +19,5 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             Verbs = verbs;
         }
 
-        public Verb GetNextVerb()
-        {
-            if (CurrentIndex >= Verbs.Count)
-                return null;
-            return Verbs[CurrentIndex++];
-        }
     }
 }

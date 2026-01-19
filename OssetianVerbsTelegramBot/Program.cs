@@ -40,24 +40,7 @@ internal class Program
     }
 
 
-    static public void InitialiseUser(Message msg)
-    {
-        if (!DbUser.IsExistUser(msg.Chat.Id.ToString()))
-        {
-            using (SqliteConnection conn = new("data source = ..\\..\\..\\VerbsDb.db"))
-            {
-                using (SqliteCommand cmd = new SqliteCommand())
-                {
-                    string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat]) VALUES('{msg.Chat.Id}','{msg.From.FirstName}', '')";
-                    cmd.CommandText = strSql;
-                    cmd.Connection = conn;
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                    conn.Close();
-                }
-            }
-        }
-    }
+   
     static public void FillVerbsDb(string path)
     {
         var sr = new StreamReader(path);
