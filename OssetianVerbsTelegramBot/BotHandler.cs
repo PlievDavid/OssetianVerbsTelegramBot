@@ -55,9 +55,16 @@ namespace OssetianVerbsTelegramBot
                     await SendMainMenu(message.Chat.Id);
                     break;
 
-                case "📋 Определить тип":
+                case "Глаголы":
+                    await SendVerbMenu(message.Chat.Id);
+                    break;
+
+                case "Чат-Бот":
+                    break;
+
+                case "📋 Типы глагола":
                     ITaskHelper taskDefineType = new TaskDefineType(_bot, Sessions);
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(),taskDefineType);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(), taskDefineType);
                     await taskDefineType.StartTask(message);
                     break;
 
@@ -67,9 +74,18 @@ namespace OssetianVerbsTelegramBot
                     await taskTranslate.StartTask(message);
                     break;
 
+                case "🛠️ Склонение":
+                    //код тут
+                    break;
+
                 case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
                     break;
+
+                case "🔙 В главное меню":
+                    await SendMainMenu(message.Chat.Id);
+                    break;
+
                 default:
                     await SendMainMenu(message.Chat.Id);
                     break;
@@ -109,16 +125,33 @@ namespace OssetianVerbsTelegramBot
 
         private async Task SendMainMenu(long chatId)
         {
+            var keyboard = new ReplyKeyboardMarkup(new[]{
+                new[] {new KeyboardButton("Глаголы") },
+                new[] { new KeyboardButton("Чат-Бот") }, 
+            }){
+                ResizeKeyboard = true
+            };
+
+            await _bot.SendMessage(chatId: chatId,
+                text: "Навигация осуществляется с помощью меню👇", replyMarkup: keyboard);
+        }
+        private async Task SendVerbMenu(long chatId)
+        {
             var keyboard = new ReplyKeyboardMarkup(new[]
-            { 
+            {
                 new[]
                 {
-                    new KeyboardButton("📋 Определить тип"),
-                    new KeyboardButton("🖋️ Перевести")
+                    new KeyboardButton("📋 Типы глагола"),
+                    new KeyboardButton("🖋️ Перевести"),
+                    new KeyboardButton("🛠️ Склонение")
                 },
                 new[]
                 {
                     new KeyboardButton("⚙️ Статистика")
+                },
+                new[]
+                {
+                    new KeyboardButton("🔙 В главное меню")
                 }
             })
             {
@@ -126,7 +159,7 @@ namespace OssetianVerbsTelegramBot
             };
 
             await _bot.SendMessage(chatId: chatId,
-                text: "Навигация осуществляется с помощью меню👇",  replyMarkup: keyboard  );
+                text: "Выберите задание в меню:", replyMarkup: keyboard);
         }
 
 

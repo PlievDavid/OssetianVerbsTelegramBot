@@ -41,10 +41,14 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Тип 1", "answer_1"),
+                    
+                },
+                new[]
+                {
                     InlineKeyboardButton.WithCallbackData("Тип 2", "answer_2")
                 }
+                
             });
-
             Console.WriteLine($"{verb.Inf} {verb.Type}");
             await _bot.SendMessage(
                 chatId,
