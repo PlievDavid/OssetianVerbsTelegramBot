@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /OssetianVerbsTelegramBot/.env
 /OssetianVerbsTelegramBot/.env
+/OssetianVerbsTelegramBot/token.env
+/OssetianVerbsTelegramBot/token.env
