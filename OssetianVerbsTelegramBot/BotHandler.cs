@@ -1,4 +1,5 @@
-﻿using OssetianVerbsTelegramBot.DefineTypeTask;
+﻿using OssetianVerbsTelegramBot.DeclinationTask;
+using OssetianVerbsTelegramBot.DefineTypeTask;
 using OssetianVerbsTelegramBot.TranslateTask;
 using System;
 using System.Collections.Generic;
@@ -75,7 +76,9 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 case "🛠️ Склонение":
-                    //код тут
+                    ITaskHelper taskDeclination = new TaskDeclination(_bot, Sessions);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(), taskDeclination);
+                    await taskDeclination.StartTask(message);
                     break;
 
                 case "⚙️ Статистика":
@@ -87,6 +90,12 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
+                    if (Sessions[message.Chat.Id].Task != null)
+                    {
+                        var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
+                        await task.HandleMessageAnswer(message);
+                        break;
+                    }
                     await SendMainMenu(message.Chat.Id);
                     break;
             }

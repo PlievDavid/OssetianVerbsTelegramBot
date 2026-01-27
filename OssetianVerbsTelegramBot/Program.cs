@@ -14,18 +14,17 @@ internal class Program
     {
         var botHandler = new BotHandler(GetBotToken());
         await botHandler.Start();
-        
     }
-    
+
 
     public static string GetBotToken()
     {
-        string token = "";
+        string token = "8559446534:AAFpM7Ejm_9iBoGZMzlsmlBgBX_041VTUrI";
+        return token;
 
-        if (File.Exists(".env"))
+        if (File.Exists("token.env"))
         {
             Env.Load();
-
             token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
             if (token != null)
             {
@@ -48,7 +47,7 @@ internal class Program
                 var temp = sr.ReadLine().Split(" – ");
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
-                    string strSql = $"INSERT INTO[Sentences] ([Id], [Russian], [Ossetian]) VALUES('{id}','{temp[0].ToString()}', '{temp[1].ToString()}')";
+                    string strSql = $"INSERT INTO[Sentences] ([Id], [Russian], [Ossetian], [Verb]) VALUES('{id}','{temp[0].ToString()}', '{temp[1].ToString()}', '{temp[2].ToString()}')";
                     cmd.CommandText = strSql;
                     cmd.Connection = conn;
                     conn.Open();
