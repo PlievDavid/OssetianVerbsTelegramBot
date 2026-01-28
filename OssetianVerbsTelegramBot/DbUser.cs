@@ -42,8 +42,7 @@ namespace OssetianVerbsTelegramBot
                     {
                         if (string.IsNullOrEmpty(item))
                             return ans;
-                        var subTemp = item.Split();
-                        ans.Add(new StatItem(subTemp[0], subTemp[1]));
+                        ans.Add(new StatItem(item));
                     }
                 }
                 conn.Close();
@@ -52,7 +51,7 @@ namespace OssetianVerbsTelegramBot
         }
         public static async Task FillStatWithList(List<StatItem> list, string id)
         {
-            list = list.OrderByDescending(item => item.ErrorCount).ToList();
+            list = list.OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
             var ans = "";
             foreach (var item in list)
             {
@@ -72,16 +71,22 @@ namespace OssetianVerbsTelegramBot
                 }
             }
         }
-        public static async Task UpdateUserStat(string id, string verb)
+        public static async Task UpdateUserStat(string id, string verb, bool IsError)
         {
             var stat = await GetUserStatById(id);
             if (stat.FirstOrDefault(item => item.Verb == verb) == null)
             {
-                stat.Add(new StatItem(verb, "1"));
+                if (IsError)
+                    stat.Add(new StatItem(verb, "0", "1"));
+                else
+                    stat.Add(new StatItem(verb, "1", "1"));
             }
             else
             {
-                stat.First(item => item.Verb == verb).Increment();
+                if (IsError)
+                    stat.First(item => item.Verb == verb).IncrementCount();
+                else
+                    stat.First(item => item.Verb == verb).IncrementRightCount();
             }
             await FillStatWithList(stat, id);
         }

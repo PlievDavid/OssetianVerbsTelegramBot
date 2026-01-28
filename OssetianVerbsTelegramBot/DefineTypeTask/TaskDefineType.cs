@@ -67,12 +67,14 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             if (answer == verb.Type)
             {
                 session.Score++;
+                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
                 await _bot.SendMessage(chatId, $"Правильный ответ!✅");
+
             }
             else
             {
+                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
                 await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
-                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf);
             }
 
             session.CurrentIndex++;
