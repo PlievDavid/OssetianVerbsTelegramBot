@@ -19,9 +19,7 @@ internal class Program
 
     public static string GetBotToken()
     {
-        string token = "8539000371:AAGyKavSp1ff5yFiT-JB7PT60jiNmsDMubM";
-        return token;
-
+        string token = "";
         if (File.Exists(".env"))
         {
             Env.Load();

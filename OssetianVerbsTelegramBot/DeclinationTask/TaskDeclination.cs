@@ -51,15 +51,16 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
             var chatId = message.Chat.Id;
 
             var session = _sessions[chatId];
-            if (message.Text == session.Sentences[session.CurrentIndexDeclinationTask].Ossetian)
+            if (message.Text.Trim() == session.Sentences[session.CurrentIndexDeclinationTask].Ossetian)
             {
                 session.ScoreDeclinationTask++;
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, false);
                 await _bot.SendMessage(chatId, "Молодец! Правильно!");
             }
             else
             {
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, true);
                 await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Sentences[session.CurrentIndexDeclinationTask].Ossetian);
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf);
             }
 
             session.CurrentIndexDeclinationTask++;

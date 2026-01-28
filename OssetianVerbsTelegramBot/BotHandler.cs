@@ -93,7 +93,7 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
-                    if (Sessions[message.Chat.Id].Task != null)
+                    if (Sessions[message.Chat.Id].Sentences.Count != 0)
                     {
                         var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
                         await task.HandleMessageAnswer(message);
@@ -107,7 +107,7 @@ namespace OssetianVerbsTelegramBot
         private async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
-            string textStatistics = "Статистика ошибок: \n";
+            string textStatistics = "Статистика правильных ответов: \n";
             foreach (var stat in list)
             {
                 textStatistics += stat.ToString() + "\n";
