@@ -84,6 +84,9 @@ namespace OssetianVerbsTelegramBot
                 case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
                     break;
+                case "💡 Справка":
+                    await SendHelp(message.Chat.Id);
+                    break;
 
                 case "🔙 В главное меню":
                     await SendMainMenu(message.Chat.Id);
@@ -111,7 +114,25 @@ namespace OssetianVerbsTelegramBot
             }
             await _bot.SendMessage(id, textStatistics);
         }
-
+        private async Task SendHelp(long id)
+        {
+            var imageFile = File.Open("Images\\declinationRule.jpg", FileMode.Open);
+            await _bot.SendPhoto(id, imageFile, caption:"Правило склонения глаголов в прошедшем времени.");
+            var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
+            var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
+            foreach (var verb in firstTypeVerbs)
+            {
+                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+            }
+            await _bot.SendMessage(id, textVerbs);
+            textVerbs = "Глаголы второго типа(непереходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            foreach (var verb in secondTypeVerbs)
+            {
+                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+            }
+            await _bot.SendMessage(id, textVerbs);
+        }
 
 
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -156,7 +177,8 @@ namespace OssetianVerbsTelegramBot
                 },
                 new[]
                 {
-                    new KeyboardButton("⚙️ Статистика")
+                    new KeyboardButton("⚙️ Статистика"),
+                    new KeyboardButton("💡 Справка")
                 },
                 new[]
                 {

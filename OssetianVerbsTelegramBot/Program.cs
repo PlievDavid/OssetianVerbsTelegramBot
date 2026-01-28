@@ -19,10 +19,10 @@ internal class Program
 
     public static string GetBotToken()
     {
-        string token = "8559446534:AAFpM7Ejm_9iBoGZMzlsmlBgBX_041VTUrI";
+        string token = "8539000371:AAGyKavSp1ff5yFiT-JB7PT60jiNmsDMubM";
         return token;
 
-        if (File.Exists("token.env"))
+        if (File.Exists(".env"))
         {
             Env.Load();
             token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
