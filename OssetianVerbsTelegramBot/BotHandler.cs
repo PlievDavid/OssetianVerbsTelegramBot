@@ -63,6 +63,7 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 case "Чат-бот":
+                    await _bot.SendMessage(message.Chat.Id, "Данный раздел пока в разработке!⌛");
                     break;
 
                 case "📋 Типы глагола":
