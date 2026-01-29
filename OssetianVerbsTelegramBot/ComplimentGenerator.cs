@@ -8,7 +8,7 @@ namespace OssetianVerbsTelegramBot
 {
     public static class ComplimentGenerator
     {
-        static Random rnd;
+        static Random rnd = new Random();
 
         static string[] Compliments = {
                 "Правильно! 👍",
