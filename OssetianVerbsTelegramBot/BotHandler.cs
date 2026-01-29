@@ -1,4 +1,5 @@
-﻿using OssetianVerbsTelegramBot.DefineTypeTask;
+﻿using OssetianVerbsTelegramBot.DeclinationTask;
+using OssetianVerbsTelegramBot.DefineTypeTask;
 using OssetianVerbsTelegramBot.TranslateTask;
 using System;
 using System.Collections.Generic;
@@ -75,11 +76,16 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 case "🛠️ Склонение":
-                    //код тут
+                    ITaskHelper taskDeclination = new TaskDeclination(_bot, Sessions);
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id, await DbVerbImport.GetRandomListVerb(), taskDeclination);
+                    await taskDeclination.StartTask(message);
                     break;
 
                 case "⚙️ Статистика":
                     await SendStatistics(message.Chat.Id);
+                    break;
+                case "💡 Справка":
+                    await SendHelp(message.Chat.Id);
                     break;
 
                 case "🔙 В главное меню":
@@ -87,6 +93,12 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
+                    if (Sessions[message.Chat.Id].Sentences.Count != 0)
+                    {
+                        var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
+                        await task.HandleMessageAnswer(message);
+                        break;
+                    }
                     await SendMainMenu(message.Chat.Id);
                     break;
             }
@@ -95,14 +107,32 @@ namespace OssetianVerbsTelegramBot
         private async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
-            string textStatistics = "Статистика ошибок: \n";
+            string textStatistics = "Статистика правильных ответов: \n";
             foreach (var stat in list)
             {
                 textStatistics += stat.ToString() + "\n";
             }
             await _bot.SendMessage(id, textStatistics);
         }
-
+        private async Task SendHelp(long id)
+        {
+            var imageFile = File.Open("Images\\declinationRule.jpg", FileMode.Open);
+            await _bot.SendPhoto(id, imageFile, caption:"Правило склонения глаголов в прошедшем времени.");
+            var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
+            var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
+            foreach (var verb in firstTypeVerbs)
+            {
+                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+            }
+            await _bot.SendMessage(id, textVerbs);
+            textVerbs = "Глаголы второго типа(непереходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            foreach (var verb in secondTypeVerbs)
+            {
+                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+            }
+            await _bot.SendMessage(id, textVerbs);
+        }
 
 
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -147,7 +177,8 @@ namespace OssetianVerbsTelegramBot
                 },
                 new[]
                 {
-                    new KeyboardButton("⚙️ Статистика")
+                    new KeyboardButton("⚙️ Статистика"),
+                    new KeyboardButton("💡 Справка")
                 },
                 new[]
                 {

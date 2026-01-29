@@ -57,12 +57,13 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             if (callbackQuery.Data == session.Verbs[session.CurrentIndexTranslateTask].Trans)
             {
                 session.ScoreTranslateTask++;
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf, false);
                 await _bot.SendMessage(chatId, "Молодец! Правильно!");
             }
             else
             {
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf, true);
                 await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndexTranslateTask].Trans);
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf);
             }
 
             session.CurrentIndexTranslateTask++;

@@ -18,6 +18,10 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
         public int CurrentIndexTranslateTask { get; set; } = 0;
         public int ScoreTranslateTask { get; set; } = 0;
 
+        public int CurrentIndexDeclinationTask { get; set; } = 0;
+        public int ScoreDeclinationTask { get; set; } = 0;
+        public List<Sentence> Sentences { get; set; } = new List<Sentence>();
+
         public TestSession(long userId, List<Verb> verbs, ITaskHelper task)
         {
             UserId = userId;
