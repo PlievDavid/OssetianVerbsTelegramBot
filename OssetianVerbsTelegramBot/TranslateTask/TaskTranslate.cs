@@ -45,7 +45,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
                     new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, twoVerbs[1 - randomNum].Trans));
 
 
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndexTranslateTask + 1}/10 Переведите слово: {verb.Inf}", replyMarkup: answers);
+            await _bot.SendMessage(chatId, $"№{session.CurrentIndexTranslateTask + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)

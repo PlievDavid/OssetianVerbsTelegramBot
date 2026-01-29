@@ -39,7 +39,7 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
 
             var sentence = await DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndexDeclinationTask].Inf);
             _sessions[chatId].Sentences.Add(sentence);
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndexDeclinationTask + 1}/10 Переведите предложение: {sentence.Russian}");
+            await _bot.SendMessage(chatId, $"№{session.CurrentIndexDeclinationTask + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)

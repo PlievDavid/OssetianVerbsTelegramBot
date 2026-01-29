@@ -202,8 +202,8 @@ namespace OssetianVerbsTelegramBot
         private async Task SendMainMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
-                new[] {new KeyboardButton("Глаголы") },
-                new[] { new KeyboardButton("Чат-Бот") }, 
+                new[] { new KeyboardButton("Глаголы") },
+                new[] { new KeyboardButton("Чат-бот") }, 
             }){
                 ResizeKeyboard = true
             };

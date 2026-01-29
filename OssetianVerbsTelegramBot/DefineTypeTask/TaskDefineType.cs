@@ -53,8 +53,9 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             Console.WriteLine($"{verb.Inf} {verb.Type}");
             await _bot.SendMessage(
                 chatId,
-                $"Слово {session.CurrentIndex + 1}/10:\n\n{verb.Inf}",
-                replyMarkup: keyboard
+                $"№{session.CurrentIndex + 1}/10\n\nОпределите тип глагола (переходный или непереходный): <b>{verb.Inf}</b>",
+                replyMarkup: keyboard,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
             );
         }
 
