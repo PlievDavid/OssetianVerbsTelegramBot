@@ -41,7 +41,7 @@ namespace OssetianVerbsTelegramBot.Models
         }
         public override string ToString()
         {
-            return $"{Verb} - {RightCount} из {Count}({Percent}%)";
+            return $"{Verb} - {RightCount} из {Count} ({Percent}%)";
         }
     }
 }

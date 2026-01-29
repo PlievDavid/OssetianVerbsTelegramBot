@@ -62,7 +62,7 @@ namespace OssetianVerbsTelegramBot
                     await SendVerbMenu(message.Chat.Id);
                     break;
 
-                case "Чат-Бот":
+                case "Чат-бот":
                     break;
 
                 case "📋 Типы глагола":
