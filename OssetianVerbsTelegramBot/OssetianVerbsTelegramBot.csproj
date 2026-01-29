@@ -18,9 +18,6 @@
     <None Update=".env">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Images\declinationRule.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="VerbsDb.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
