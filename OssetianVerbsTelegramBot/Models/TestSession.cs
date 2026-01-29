@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OssetianVerbsTelegramBot.DefineTypeTask
+namespace OssetianVerbsTelegramBot.Models
 {
     public class TestSession
     {

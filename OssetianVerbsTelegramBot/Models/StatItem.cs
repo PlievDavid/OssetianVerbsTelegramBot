@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OssetianVerbsTelegramBot
+namespace OssetianVerbsTelegramBot.Models
 {
     public class StatItem
     {
@@ -41,7 +41,7 @@ namespace OssetianVerbsTelegramBot
         }
         public override string ToString()
         {
-            return $"{Verb} - {RightCount} из {Count}({Percent}%)";
+            return $"{Verb} - {RightCount} из {Count} ({Percent}%)";
         }
     }
 }

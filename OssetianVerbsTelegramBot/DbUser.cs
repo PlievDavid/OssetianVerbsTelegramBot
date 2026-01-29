@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using OssetianVerbsTelegramBot.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
