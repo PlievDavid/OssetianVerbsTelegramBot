@@ -58,7 +58,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             {
                 session.ScoreTranslateTask++;
                 await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf, false);
-                await _bot.SendMessage(chatId, "Молодец! Правильно!");
+                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
             }
             else
             {

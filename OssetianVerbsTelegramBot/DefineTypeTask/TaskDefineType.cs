@@ -70,7 +70,7 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             {
                 session.Score++;
                 await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
-                await _bot.SendMessage(chatId, $"Правильный ответ!✅");
+                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
             }
             else
