@@ -1,5 +1,6 @@
 ﻿using OssetianVerbsTelegramBot.DeclinationTask;
 using OssetianVerbsTelegramBot.DefineTypeTask;
+using OssetianVerbsTelegramBot.Models;
 using OssetianVerbsTelegramBot.TranslateTask;
 using System;
 using System.Collections.Generic;
@@ -53,6 +54,7 @@ namespace OssetianVerbsTelegramBot
             {
                 case "/start":
                     await DbUser.InitialiseUser(message);
+                    await SendKeyboardLink(message);
                     await SendMainMenu(message.Chat.Id);
                     break;
 
@@ -102,6 +104,12 @@ namespace OssetianVerbsTelegramBot
                     await SendMainMenu(message.Chat.Id);
                     break;
             }
+        }
+
+        private async Task SendKeyboardLink(Message message)
+        {
+            string keyboardInformationString = "";
+            await _bot.SendMessage(message.Chat.Id, keyboardInformationString);
         }
 
         private async Task SendStatistics(long id)

@@ -1,4 +1,4 @@
-﻿using OssetianVerbsTelegramBot.DefineTypeTask;
+﻿using OssetianVerbsTelegramBot.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
