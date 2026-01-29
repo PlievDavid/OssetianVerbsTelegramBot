@@ -1,4 +1,4 @@
-# Telegram-бот для закрепления осетинских глаголов.
+# Telegram-бот для изучения осетинского языка.
 Презентация: https://docs.google.com/presentation/d/1aaOQV-GCOWlnCFjDTMzKlQXngOA3kkIM7vm5rvljzzc/edit?usp=sharing
 ## Об осетинских глаголах.
 В осетинском языке глаголы делятся на два типа. Тип глагола определяет правила его склонения. Пример:
