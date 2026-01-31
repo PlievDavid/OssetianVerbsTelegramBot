@@ -37,7 +37,7 @@ namespace OssetianVerbsTelegramBot
         {
             var sentences = await GetAllSentences();
             var sortedSent = sentences.Where(item => item.VerbInf == verbInf).ToList();
-            return sortedSent[rnd.Next(0, 8)];
+            return sortedSent[rnd.Next(0, sortedSent.Count)];
         }
         public static async Task<List<Sentence>> GetRandomListSentence(int count = 10)
         {

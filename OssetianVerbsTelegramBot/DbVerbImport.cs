@@ -67,25 +67,52 @@ namespace OssetianVerbsTelegramBot
             var verbs = await GetAllVerbs();
             return verbs[rnd.Next(0, verbs.Count)];
         }
-        public static async Task<Verb> GetRandomFirstTypeVerb()
+        public static async Task<Verb> GetSmartRandomVerb(string id)
         {
-            var verbs = await GetAllFirstTypeVerbs();
-            return verbs[rnd.Next(0, verbs.Count)];
+            var stat = await DbUser.GetUserStatById(id);
+            var verbs = await GetAllVerbs();
+            var ans = verbs[rnd.Next(0, verbs.Count)];
+            if (stat.Count < verbs.Count)
+            {
+                while (stat.FirstOrDefault(item => item.Verb == ans.Inf) != null)
+                {
+                    ans = verbs[rnd.Next(0, verbs.Count)];
+                }
+            }
+            else
+            {
+                var chance = rnd.Next(0, 3);
+                if (chance < 2)
+                {
+                    if (stat.FirstOrDefault(item => item.Percent < 50) != null)
+                    {
+                        while (stat.FirstOrDefault(item => item.Verb == ans.Inf).Percent >= 50)
+                        {
+                            ans = verbs[rnd.Next(0, verbs.Count)];
+                        }
+                    }
+                }
+                else
+                {
+                    if (stat.FirstOrDefault(item => item.Percent >= 50) != null)
+                    {
+                        while (stat.FirstOrDefault(item => item.Verb == ans.Inf).Percent < 50)
+                        {
+                            ans = verbs[rnd.Next(0, verbs.Count)];
+                        }
+                    }
+                }
+            }
+            return ans;
         }
-        public static async Task<Verb> GetRandomSecondTypeVerb()
-        {
-            var verbs = await GetAllSecondTypeVerbs();
-            return verbs[rnd.Next(0, verbs.Count)];
-        }
-
-        public static async Task<List<Verb>> GetRandomListVerb(int count = 10)
+        public static async Task<List<Verb>> GetRandomListVerb(long id, int count = 10)
         {
             var all = await GetAllVerbs();
             var allCount = all.Count;
             var list = new List<Verb>();
             for (int i = 0; i < count; i++)
             {
-                var verb = await GetRandomVerb();
+                var verb = await GetSmartRandomVerb(id.ToString());
                 if (list.Any(x => x.Inf == verb.Inf))
                 {
                     if (count > allCount)
