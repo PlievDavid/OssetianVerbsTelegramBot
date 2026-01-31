@@ -41,19 +41,19 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Тип 1", "answer_1"),
+                    InlineKeyboardButton.WithCallbackData("Тип 1 (переходный)", "answer_1"),
                     
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Тип 2", "answer_2")
+                    InlineKeyboardButton.WithCallbackData("Тип 2 (непереходный)", "answer_2")
                 }
                 
             });
             Console.WriteLine($"{verb.Inf} {verb.Type}");
             await _bot.SendMessage(
                 chatId,
-                $"№{session.CurrentIndex + 1}/10\n\nОпределите тип глагола (переходный или непереходный): <b>{verb.Inf}</b>",
+                $"№{session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
                 replyMarkup: keyboard,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
             );
