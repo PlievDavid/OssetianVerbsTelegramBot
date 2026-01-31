@@ -55,16 +55,20 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
             if (rightAns.Contains(","))
             {
                 var temp = rightAns.Split(", ");
-                if (message.Text == temp[0] || message.Text == temp[1] || message.Text == temp[2])
+                for(int i = 0;i<temp.Count();i++)
                 {
-                    session.ScoreDeclinationTask++;
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, false);
-                    await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
-                }
-                else
-                {
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, true);
-                    await _bot.SendMessage(chatId, "Неверно! Правильно: " +rightAns);
+                    if (message.Text == temp[i])
+                    {
+                        session.ScoreDeclinationTask++;
+                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, false);
+                        await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                        break;
+                    }
+                    if (i==(temp.Count()-1))
+                    {
+                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, true);
+                        await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+                    }
                 }
             }
             else

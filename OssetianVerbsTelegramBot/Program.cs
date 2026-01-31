@@ -42,7 +42,7 @@ internal class Program
             while (!sr.EndOfStream)
             {
                 var id = Guid.NewGuid();
-                var temp = sr.ReadLine().Split(" – ");
+                var temp = sr.ReadLine().Split(" - ");
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
                     string strSql = $"INSERT INTO[Sentences] ([Id], [Russian], [Ossetian], [Verb]) VALUES('{id}','{temp[0].ToString()}', '{temp[1].ToString()}', '{temp[2].ToString()}')";
