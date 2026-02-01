@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.DefineTypeTask
 {
-    internal class TaskDefineType:ITaskHelper
+    internal class TaskDefineType: ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;

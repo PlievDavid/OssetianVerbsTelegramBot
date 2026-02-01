@@ -55,65 +55,66 @@ namespace OssetianVerbsTelegramBot
             if (helpMessages.ContainsKey(chatId))
             {
                 var messages = helpMessages[chatId];
-                await _bot.DeleteMessages(chatId,messages);
+                await _bot.DeleteMessages(chatId, messages);
                 helpMessages.Remove(chatId);
             }
-                switch (message.Text)
-                {
-                    case "/start":
-                        await DbUser.InitialiseUser(message);
-                        await SendKeyboardLink(message);
-                        await SendMainMenu(chatId);
-                        break;
 
-                    case "Глаголы":
-                        await SendVerbMenu(chatId);
-                        break;
+            switch (message.Text)
+            {
+                case "/start":
+                    await DbUser.InitialiseUser(message);
+                    await SendKeyboardLink(message);
+                    await SendMainMenu(chatId);
+                    break;
 
-                    case "Чат-бот":
-                        await _bot.SendMessage(chatId, "Данный раздел пока в разработке!⌛");
-                        break;
+                case "Глаголы":
+                    await SendVerbMenu(chatId);
+                    break;
 
-                    case "📋 Типы глагола":
-                        ITaskHelper taskDefineType = new TaskDefineType(_bot, Sessions);
-                        Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
-                        await taskDefineType.StartTask(message);
-                        break;
+                case "Чат-бот":
+                    await _bot.SendMessage(chatId, "Данный раздел пока в разработке!⌛");
+                    break;
 
-                    case "🖋️ Перевести":
-                        ITaskHelper taskTranslate = new TaskTranslate(_bot, Sessions);
-                        Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
-                        await taskTranslate.StartTask(message);
-                        break;
+                case "📋 Типы глагола":
+                    ITask taskDefineType = new TaskDefineType(_bot, Sessions);
+                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
+                    await taskDefineType.StartTask(message);
+                    break;
 
-                    case "🛠️ Склонение":
-                        ITaskHelper taskDeclination = new TaskDeclination(_bot, Sessions);
-                        Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
-                        await taskDeclination.StartTask(message);
-                        break;
+                case "🖋️ Перевести":
+                    ITask taskTranslate = new TaskTranslate(_bot, Sessions);
+                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
+                    await taskTranslate.StartTask(message);
+                    break;
 
-                    case "⚙️ Статистика":
-                        await SendStatistics(chatId);
-                        break;
-                    case "💡 Справка":
-                        var messages = await SendHelp(chatId);
-                        helpMessages[chatId] = messages;
-                        break;
+                case "🛠️ Склонение":
+                    ITask taskDeclination = new TaskDeclination(_bot, Sessions);
+                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
+                    await taskDeclination.StartTask(message);
+                    break;
 
-                    case "🔙 В главное меню":
-                        await SendMainMenu(chatId);
-                        break;
+                case "⚙️ Статистика":
+                    await SendStatistics(chatId);
+                    break;
+                case "💡 Справка":
+                    var messages = await SendHelp(chatId);
+                    helpMessages[chatId] = messages;
+                    break;
 
-                    default:
-                        if (Sessions[chatId].Sentences.Count != 0)
-                        {
-                            var task = (TaskDeclination)Sessions[chatId].Task;
-                            await task.HandleMessageAnswer(message);
-                            break;
-                        }
-                        await SendMainMenu(chatId);
+                case "🔙 В главное меню":
+                    await SendMainMenu(chatId);
+                    break;
+
+                default:
+                    if (Sessions[chatId].Sentences.Count != 0)
+                    {
+                        var task = (TaskDeclination)Sessions[chatId].Task;
+                        await task.HandleMessageAnswer(message);
                         break;
-                }
+                    }
+                    await SendMainMenu(chatId);
+                    break;
+            }
         }
 
         private async Task SendKeyboardLink(Message message)
@@ -160,6 +161,7 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
         }
 
+
         private async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
@@ -170,10 +172,12 @@ namespace OssetianVerbsTelegramBot
             }
             await _bot.SendMessage(id, textStatistics);
         }
+
+
         private async Task<int[]> SendHelp(long id)
         {
             var imageFile = File.Open("Images\\declinationRule.jpg", FileMode.Open);
-            var photoMessage = await _bot.SendPhoto(id, imageFile, caption:"Правило склонения глаголов в прошедшем времени.");
+            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
             var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
             var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
             var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
@@ -188,7 +192,7 @@ namespace OssetianVerbsTelegramBot
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
             }
             var secondTypeMessage = await _bot.SendMessage(id, textVerbs);
-            return new[] {photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId-1};
+            return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
         }
 
 
@@ -214,14 +218,17 @@ namespace OssetianVerbsTelegramBot
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("Глаголы") },
-                new[] { new KeyboardButton("Чат-бот") }, 
-            }){
+                new[] { new KeyboardButton("Чат-бот") },
+            })
+            {
                 ResizeKeyboard = true
             };
 
             await _bot.SendMessage(chatId: chatId,
                 text: "Навигация осуществляется с помощью меню👇", replyMarkup: keyboard);
         }
+
+
         private async Task SendVerbMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]

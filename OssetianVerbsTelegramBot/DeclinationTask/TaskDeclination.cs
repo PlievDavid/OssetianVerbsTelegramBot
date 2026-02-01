@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.DeclinationTask
 {
-    internal class TaskDeclination : ITaskHelper
+    internal class TaskDeclination: ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
@@ -31,15 +31,15 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
 
-            if (session.CurrentIndexDeclinationTask > session.Verbs.Count - 1)
+            if (session.CurrentIndex > session.Verbs.Count - 1)
             {
-                await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.ScoreDeclinationTask}/10");
+                await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.Score}/10");
                 return;
             }
 
-            var sentence = await DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndexDeclinationTask].Inf);
+            var sentence = await DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndex].Inf);
             _sessions[chatId].Sentences.Add(sentence);
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndexDeclinationTask + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -51,7 +51,7 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
             var chatId = message.Chat.Id;
 
             var session = _sessions[chatId];
-            var rightAns = session.Sentences[session.CurrentIndexDeclinationTask].Ossetian;
+            var rightAns = session.Sentences[session.CurrentIndex].Ossetian;
             if (rightAns.Contains(","))
             {
                 var temp = rightAns.Split(", ");
@@ -59,14 +59,14 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
                 {
                     if (message.Text == temp[i])
                     {
-                        session.ScoreDeclinationTask++;
-                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, false);
+                        session.Score++;
+                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
                         await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                         break;
                     }
                     if (i==(temp.Count()-1))
                     {
-                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, true);
+                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, true);
                         await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
                     }
                 }
@@ -75,17 +75,17 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
             {
                 if (message.Text == rightAns)
                 {
-                    session.ScoreDeclinationTask++;
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, false);
+                    session.Score++;
+                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
                     await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 }
                 else
                 {
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndexDeclinationTask].VerbInf, true);
+                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, true);
                     await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
                 }
             }
-            session.CurrentIndexDeclinationTask++;
+            session.CurrentIndex++;
             await SendNextQuestion(chatId, session);
         }
     }
