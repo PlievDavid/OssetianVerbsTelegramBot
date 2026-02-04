@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
+using Newtonsoft.Json.Linq;
 using OssetianVerbsTelegramBot.Models.YandexGptModel;
 using RestSharp;
 using System;
@@ -22,11 +23,11 @@ namespace OssetianVerbsTelegramBot
 
         public async Task<string> SendRequestAsync(string text)
         {
-            RestClientOptions restClientOptions = new RestClientOptions("https://ai.api.cloud.yandex.net") { Timeout = new TimeSpan(3000)};
+            RestClientOptions restClientOptions = new RestClientOptions("https://ai.api.cloud.yandex.net");
 
             RestClient restClient = new RestClient(restClientOptions);
 
-            RestRequest restRequest = new RestRequest();
+            RestRequest restRequest = new RestRequest("/v1/responses", Method.Post);
 
             restRequest.AddHeader("Content-Type", "application/json");
             restRequest.AddHeader("Authorization", $"Api-Key {_apiKey}");
@@ -34,16 +35,16 @@ namespace OssetianVerbsTelegramBot
 
             restRequest.AddJsonBody(new YandexGptRequest()
             {
-                Model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-120b/latest",
+                Model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-20b/latest",
                 Instructions = "Пиши по русски",
-                Input = "Привет, как дела?",
+                Input = text,
                 Temperature = 0.3,
                 MaxOutputTokens = 500
             });
 
-            var response = await restClient.ExecuteAsync<YandexGptResponse>(restRequest);
-
-            return response.Data.Output;
+            var response = await restClient.ExecuteAsync(restRequest);
+            dynamic data = JObject.Parse(response.Content);
+            return data.output[1].content[0].text;
         }
     }
 }
