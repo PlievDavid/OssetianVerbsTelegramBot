@@ -10,11 +10,13 @@ namespace OssetianVerbsTelegramBot
 {
     internal class DbSentencesImport
     {
+
+        private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         static Random rnd = new Random();
         public static async Task<List<Sentence>> GetAllSentences()
         {
             var ans = new List<Sentence> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Sentences";

@@ -176,7 +176,7 @@ namespace OssetianVerbsTelegramBot
 
         private async Task<int[]> SendHelp(long id)
         {
-            var imageFile = File.Open("Images\\declinationRule.jpg", FileMode.Open);
+            var imageFile = File.Open(Path.Combine("Images","declinationRule.jpg"), FileMode.Open);
             var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
             var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
             var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
