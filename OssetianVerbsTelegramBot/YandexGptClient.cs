@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
+using OssetianVerbsTelegramBot.Models.YandexGptModel;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -31,18 +32,18 @@ namespace OssetianVerbsTelegramBot
             restRequest.AddHeader("Authorization", $"Api-Key {_apiKey}");
             restRequest.AddHeader("OpenAI-Project", _apiProjectId);
 
-            restRequest.AddJsonBody(new
+            restRequest.AddJsonBody(new YandexGptRequest()
             {
-                model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-120b/latest",
-                instructions = "Пиши по русски",
-                input = "Привет, как дела?",
-                temperature = 0.3,
-                max_output_tokens = 500
+                Model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-120b/latest",
+                Instructions = "Пиши по русски",
+                Input = "Привет, как дела?",
+                Temperature = 0.3,
+                MaxOutputTokens = 500
             });
 
-            var response = restClient.ExecuteAsync(restRequest);
+            var response = await restClient.ExecuteAsync<YandexGptResponse>(restRequest);
 
-            return response.Result.Content;
+            return response.Data.Output;
         }
     }
 }
