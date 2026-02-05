@@ -12,8 +12,10 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
-        await botHandler.Start();
+        YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
+        Console.WriteLine(await yandexTranslateClient.TranslateTextAsync("привет", "ru", "os"));
+        //var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
+        //await botHandler.Start();
     }
 
 
