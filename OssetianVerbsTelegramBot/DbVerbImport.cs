@@ -11,10 +11,12 @@ namespace OssetianVerbsTelegramBot
     public static class DbVerbImport
     {
         static Random rnd = new Random();
+
+        private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         public static async Task<List<Verb>> GetAllVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs";
@@ -31,7 +33,7 @@ namespace OssetianVerbsTelegramBot
         public static async Task<List<Verb>> GetAllFirstTypeVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs WHERE Type = 1";
@@ -48,7 +50,7 @@ namespace OssetianVerbsTelegramBot
         public static async Task<List<Verb>> GetAllSecondTypeVerbs()
         {
             var ans = new List<Verb> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = "SELECT * FROM Verbs WHERE Type = 2";

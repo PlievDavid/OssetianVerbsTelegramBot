@@ -8,7 +8,7 @@ using Telegram.Bot.Types;
 
 namespace OssetianVerbsTelegramBot
 {
-    public interface ITaskHelper
+    public interface ITask
     {
         Task StartTask(Message message);
 

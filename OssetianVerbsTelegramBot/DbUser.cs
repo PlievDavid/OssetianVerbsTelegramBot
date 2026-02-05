@@ -12,10 +12,12 @@ namespace OssetianVerbsTelegramBot
 {
     public static class DbUser
     {
+
+        private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         public static async Task<bool> IsExistUser(string id)
         {
             var ans = false;
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = $"SELECT * FROM Users WHERE Id = '{id}'";
@@ -30,7 +32,7 @@ namespace OssetianVerbsTelegramBot
         public static async Task<List<StatItem>> GetUserStatById(string id)
         {
             var ans = new List<StatItem> { };
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
                 string sql = $"SELECT * FROM Users WHERE Id = '{id}'";
@@ -58,7 +60,7 @@ namespace OssetianVerbsTelegramBot
             {
                 ans += item.ToString() + "&";
             }
-            using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
@@ -96,7 +98,7 @@ namespace OssetianVerbsTelegramBot
         {
             if (!(await DbUser.IsExistUser(msg.Chat.Id.ToString())))
             {
-                using (SqliteConnection conn = new("data source = ..\\..\\..\\VerbsDb.db"))
+                using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {

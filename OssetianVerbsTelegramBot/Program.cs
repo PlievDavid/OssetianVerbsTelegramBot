@@ -24,7 +24,8 @@ internal class Program
     static public void FillVerbsDb(string path)
     {
         var sr = new StreamReader(path);
-        using (SqliteConnection conn = new SqliteConnection("data source = ..\\..\\..\\VerbsDb.db"))
+        var dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
+        using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
         {
             while (!sr.EndOfStream)
             {

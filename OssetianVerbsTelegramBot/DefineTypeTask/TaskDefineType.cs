@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.DefineTypeTask
 {
-    internal class TaskDefineType:ITaskHelper
+    internal class TaskDefineType: ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
@@ -31,12 +31,10 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
             var verb = session.Verbs[session.CurrentIndex];
-            Console.WriteLine(session.CurrentIndex);
             foreach (var item in session.Verbs)
             {
                 Console.Write(item.Inf + " ");
             }
-            Console.WriteLine(session.CurrentIndex);
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
@@ -50,7 +48,6 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
                 }
                 
             });
-            Console.WriteLine($"{verb.Inf} {verb.Type}");
             await _bot.SendMessage(
                 chatId,
                 $"№{session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
