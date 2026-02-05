@@ -39,13 +39,13 @@ namespace OssetianVerbsTelegramBot
             throw new Exception("Токен бота не найден!");
         }
 
-        public static string GetYa()
+        public static string GetYandexProjectId()
         {
             string token = "";
             if (File.Exists(".env"))
             {
                 Env.Load();
-                token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
+                token = Environment.GetEnvironmentVariable("YANDEX_PROJECT_ID");
                 if (token != null)
                 {
                     return token;

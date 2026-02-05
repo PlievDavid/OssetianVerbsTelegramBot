@@ -18,6 +18,7 @@ namespace OssetianVerbsTelegramBot
     {
         private readonly TelegramBotClient _bot;
         private static Dictionary<long, TestSession> Sessions = new();
+        private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
 
         public BotHandler(string token)
         {
@@ -63,7 +64,8 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 case "Чат-бот":
-                    await _bot.SendMessage(message.Chat.Id, "Данный раздел пока в разработке!⌛");
+                    await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id);
                     Sessions[message.Chat.Id].isGptMode = true;
                     break;
 
@@ -99,7 +101,11 @@ namespace OssetianVerbsTelegramBot
                 default:
                     if (Sessions[message.Chat.Id].isGptMode)
                     {
-                        YandexGptClient yandexGptClient = new YandexGptClient();
+                        var response = await yandexGptClient.SendRequestAsync(message.Text);
+                        var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
+                        await _bot.SendMessage(message.Chat.Id, response);
+                        await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
+
                     }
                     else
                     {
