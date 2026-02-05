@@ -64,7 +64,7 @@ namespace OssetianVerbsTelegramBot
 
                 case "Чат-бот":
                     await _bot.SendMessage(message.Chat.Id, "Данный раздел пока в разработке!⌛");
-                    
+                    Sessions[message.Chat.Id].isGptMode = true;
                     break;
 
                 case "📋 Типы глагола":
@@ -97,13 +97,21 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
-                    if (Sessions[message.Chat.Id].Sentences.Count != 0)
+                    if (Sessions[message.Chat.Id].isGptMode)
                     {
-                        var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
-                        await task.HandleMessageAnswer(message);
-                        break;
+                        YandexGptClient yandexGptClient = new YandexGptClient();
                     }
-                    await SendMainMenu(message.Chat.Id);
+                    else
+                    {
+
+                        if (Sessions[message.Chat.Id].Sentences.Count != 0)
+                        {
+                            var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
+                            await task.HandleMessageAnswer(message);
+                            break;
+                        }
+                        await SendMainMenu(message.Chat.Id);
+                    }
                     break;
             }
         }

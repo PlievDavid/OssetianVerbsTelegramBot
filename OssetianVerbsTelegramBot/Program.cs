@@ -12,25 +12,12 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var botHandler = new BotHandler(GetBotToken());
+        var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
         await botHandler.Start();
     }
 
 
-    public static string GetBotToken()
-    {
-        string token = "";
-        if (File.Exists(".env"))
-        {
-            Env.Load();
-            token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
-            if (token != null)
-            {
-                return token;
-            }
-        }
-        throw new Exception("Токен бота не найден!");
-    }
+
 
 
    
