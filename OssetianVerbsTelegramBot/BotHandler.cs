@@ -18,6 +18,7 @@ namespace OssetianVerbsTelegramBot
     {
         private readonly TelegramBotClient _bot;
         private static Dictionary<long, TestSession> Sessions = new();
+        private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
 
         public BotHandler(string token)
@@ -72,7 +73,9 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 case "Чат-бот":
-                    await _bot.SendMessage(chatId, "Данный раздел пока в разработке!⌛");
+                    await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
+                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id);
+                    Sessions[message.Chat.Id].isGptMode = true;
                     break;
 
                 case "📋 Типы глагола":
@@ -106,13 +109,25 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
-                    if (Sessions[chatId].Sentences.Count != 0)
+                    if (Sessions[message.Chat.Id].isGptMode)
                     {
-                        var task = (TaskDeclination)Sessions[chatId].Task;
-                        await task.HandleMessageAnswer(message);
-                        break;
+                        var response = await yandexGptClient.SendRequestAsync(message.Text);
+                        var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
+                        await _bot.SendMessage(message.Chat.Id, response);
+                        await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
+
                     }
-                    await SendMainMenu(chatId);
+                    else
+                    {
+
+                        if (Sessions[message.Chat.Id].Sentences.Count != 0)
+                        {
+                            var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
+                            await task.HandleMessageAnswer(message);
+                            break;
+                        }
+                        await SendMainMenu(message.Chat.Id);
+                    }
                     break;
             }
         }
@@ -120,36 +135,7 @@ namespace OssetianVerbsTelegramBot
         private async Task SendKeyboardLink(Message message)
         {
             string keyboardInformationString = """
-                Чтобы пользоваться всеми функциями бота, тебе понадобится «Яндекс Клавиатура»!
-
-                📲 Шаг 1: Установите «Яндекс Клавиатуру»
-                Откройте App Store (iPhone) или Google Play (Android).
-
-                Можете перейти по ссылкам снизу.
-
-                ⚙️ Шаг 2: Включите клавиатуру в настройках
-                Для iPhone:
-
-                Откройте «Настройки» → «Основные» → «Клавиатура».
-
-                Выберите «Клавиатуры» → «Добавить новую клавиатуру».
-
-                Найдите «Яндекс Клавиатура» и добавьте.
-
-                Для Android:
-
-                После установки откройте приложение «Яндекс Клавиатура».
-
-                Нажмите «Включить» и следуйте подсказкам.
-
-                🌍 Шаг 3: Добавьте осетинскую раскладку
-                Откройте любое приложение (WhatsApp, Notes).
-
-                Нажмите на глобус (🌐) или пробел, чтобы переключиться на Яндекс Клавиатуру.
-
-                Нажмите на иконку настроек (⚙️) → «Языки».
-
-                Выберите «Ирон».
+                Чтобы пользоваться всеми функциями бота, вам понадобится «Яндекс Клавиатура»
                 """;
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
