@@ -1,4 +1,5 @@
-﻿using OssetianVerbsTelegramBot.DeclinationTask;
+﻿using OssetianVerbsTelegramBot.ApiClients.Yandex;
+using OssetianVerbsTelegramBot.DeclinationTask;
 using OssetianVerbsTelegramBot.DefineTypeTask;
 using OssetianVerbsTelegramBot.Models;
 using OssetianVerbsTelegramBot.TranslateTask;
@@ -18,6 +19,7 @@ namespace OssetianVerbsTelegramBot
     {
         private readonly TelegramBotClient _bot;
         private static Dictionary<long, TestSession> Sessions = new();
+        YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
 
@@ -70,11 +72,12 @@ namespace OssetianVerbsTelegramBot
 
                 case "Глаголы":
                     await SendVerbMenu(chatId);
+                    Sessions[message.Chat.Id].isGptMode = false;
                     break;
 
                 case "Чат-бот":
-                    await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
                     Sessions[message.Chat.Id] = new TestSession(message.Chat.Id);
+                    await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
                     Sessions[message.Chat.Id].isGptMode = true;
                     break;
 
@@ -111,9 +114,15 @@ namespace OssetianVerbsTelegramBot
                 default:
                     if (Sessions[message.Chat.Id].isGptMode)
                     {
-                        var response = await yandexGptClient.SendRequestAsync(message.Text);
                         var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
-                        await _bot.SendMessage(message.Chat.Id, response);
+
+
+                        var response = await yandexGptClient.SendRequestAsync(await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru"));
+
+                        
+
+                        await _bot.SendMessage(message.Chat.Id, await yandexTranslateClient.TranslateTextAsync(response, "ru", "os"));
+
                         await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
 
                     }
