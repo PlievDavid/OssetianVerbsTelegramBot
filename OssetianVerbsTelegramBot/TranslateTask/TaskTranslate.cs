@@ -6,7 +6,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.TranslateTask
 {
-    internal class TaskTranslate: ITaskHelper
+    internal class TaskTranslate: ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
@@ -28,13 +28,13 @@ namespace OssetianVerbsTelegramBot.TranslateTask
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
             
-            if (session.CurrentIndexTranslateTask > session.Verbs.Count-1)
+            if (session.CurrentIndex > session.Verbs.Count-1)
             {
-                await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.ScoreTranslateTask}/10");
+                await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.Score}/10");
                 return;
             }
 
-            var verb = session.Verbs[session.CurrentIndexTranslateTask];
+            var verb = session.Verbs[session.CurrentIndex];
             var wrongVerb = await DbVerbImport.GetRandomVerb();
 
             var twoVerbs = new List<Verb> { verb, wrongVerb };
@@ -45,7 +45,7 @@ namespace OssetianVerbsTelegramBot.TranslateTask
                     new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, twoVerbs[1 - randomNum].Trans));
 
 
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndexTranslateTask + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -54,19 +54,19 @@ namespace OssetianVerbsTelegramBot.TranslateTask
 
             var session = _sessions[chatId];
 
-            if (callbackQuery.Data == session.Verbs[session.CurrentIndexTranslateTask].Trans)
+            if (callbackQuery.Data == session.Verbs[session.CurrentIndex].Trans)
             {
-                session.ScoreTranslateTask++;
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf, false);
+                session.Score++;
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, false);
                 await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
             }
             else
             {
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndexTranslateTask].Inf, true);
-                await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndexTranslateTask].Trans);
+                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, true);
+                await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndex].Trans);
             }
 
-            session.CurrentIndexTranslateTask++;
+            session.CurrentIndex++;
             await SendNextQuestion(chatId, session);
         }
     }
