@@ -278,9 +278,6 @@ namespace OssetianVerbsTelegramBot
         private Task ErrorHandler(ITelegramBotClient bot, Exception exception, CancellationToken ct)
         {
             Console.WriteLine($"Ошибка: {exception.Message}");
-
-            Environment.Exit(1);
-
             return Task.CompletedTask;
         }
     }
