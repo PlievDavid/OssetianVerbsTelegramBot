@@ -69,87 +69,94 @@ namespace OssetianVerbsTelegramBot
                 helpMessages.Remove(chatId);
             }
 
-            switch (message.Text)
+
+            try
             {
-                case "/start":
-                    await DbUser.InitialiseUser(message);
-                    await SendKeyboardLink(message);
-                    await SendMainMenu(chatId);
-                    break;
+                switch (message.Text)
+                {
+                    case "/start":
+                        await DbUser.InitialiseUser(message);
+                        await SendKeyboardLink(message);
+                        await SendMainMenu(chatId);
+                        break;
 
-                case "📝 Глаголы":
-                    await SendVerbMenu(chatId);
-                    chatSessions[message.Chat.Id].IsGptMode = false;
-                    break;
+                    case "📝 Глаголы":
+                        await SendVerbMenu(chatId);
+                        chatSessions[message.Chat.Id].IsGptMode = false;
+                        break;
 
-                case "🤖 Чат-бот (Beta)":
-                    chatSessions[message.Chat.Id].IsGptMode = true;
-                    await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
-                    break;
+                    case "🤖 Чат-бот (Beta)":
+                        chatSessions[message.Chat.Id].IsGptMode = true;
+                        await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
+                        break;
 
-                case "📋 Типы глагола":
-                    ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
-                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
-                    await taskDefineType.StartTask(message);
-                    break;
+                    case "📋 Типы глагола":
+                        ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
+                        await taskDefineType.StartTask(message);
+                        break;
 
-                case "🖋️ Перевести":
-                    ITask taskTranslate = new TaskTranslate(_bot, taskSessions);
-                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
-                    await taskTranslate.StartTask(message);
-                    break;
+                    case "🖋️ Перевести":
+                        ITask taskTranslate = new TaskTranslate(_bot, taskSessions);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
+                        await taskTranslate.StartTask(message);
+                        break;
 
-                case "🛠️ Склонение":
-                    ITask taskDeclination = new TaskDeclination(_bot, taskSessions);
-                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
-                    await taskDeclination.StartTask(message);
-                    break;
+                    case "🛠️ Склонение":
+                        ITask taskDeclination = new TaskDeclination(_bot, taskSessions);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
+                        await taskDeclination.StartTask(message);
+                        break;
 
-                case "⚙️ Статистика":
-                    await SendStatistics(chatId);
-                    break;
-                case "💡 Справка":
-                    var messages = await SendHelp(chatId);
-                    helpMessages[chatId] = messages;
-                    break;
+                    case "⚙️ Статистика":
+                        await SendStatistics(chatId);
+                        break;
+                    case "💡 Справка":
+                        var messages = await SendHelp(chatId);
+                        helpMessages[chatId] = messages;
+                        break;
 
-                case "🔙 В главное меню":
-                    await SendMainMenu(chatId);
-                    break;
+                    case "🔙 В главное меню":
+                        await SendMainMenu(chatId);
+                        break;
 
-                default:
-                    if (chatSessions[message.Chat.Id].IsGptMode)
-                    {
-                        Console.WriteLine("User(" + message.Chat.Id + " - " + message.From.Username + "): " + message.Text);
-
-                        var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
-
-                        var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
-
-                        chatSessions[chatId].ChatHistory += $"User: {ruMessage}\n";
-
-                        var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
-
-                        Console.WriteLine("GPT: " + response);
-
-                        chatSessions[chatId].ChatHistory += $"GPT: {response}\n";
-
-                        await _bot.SendMessage(message.Chat.Id, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
-
-                        await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
-                    }
-                    else
-                    {
-
-                        if (taskSessions[message.Chat.Id].Sentences.Count != 0)
+                    default:
+                        if (chatSessions[message.Chat.Id].IsGptMode)
                         {
-                            var task = (TaskDeclination)taskSessions[message.Chat.Id].Task;
-                            await task.HandleMessageAnswer(message);
-                            break;
+                            Console.WriteLine("User(" + message.Chat.Id + " - " + message.From.Username + "): " + message.Text);
+
+                            var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
+
+                            var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
+
+                            chatSessions[chatId].ChatHistory += $"User: {ruMessage}\n";
+
+                            var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
+
+                            Console.WriteLine("GPT: " + response);
+
+                            chatSessions[chatId].ChatHistory += $"GPT: {response}\n";
+
+                            await _bot.SendMessage(message.Chat.Id, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
+
+                            await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
                         }
-                        await SendMainMenu(message.Chat.Id);
-                    }
-                    break;
+                        else
+                        {
+                            if (taskSessions[message.Chat.Id].Sentences.Count != 0)
+                            {
+                                var task = (TaskDeclination)taskSessions[message.Chat.Id].Task;
+                                await task.HandleMessageAnswer(message);
+                                break;
+                            }
+                            await SendMainMenu(message.Chat.Id);
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
 
@@ -271,6 +278,9 @@ namespace OssetianVerbsTelegramBot
         private Task ErrorHandler(ITelegramBotClient bot, Exception exception, CancellationToken ct)
         {
             Console.WriteLine($"Ошибка: {exception.Message}");
+
+            Environment.Exit(1);
+
             return Task.CompletedTask;
         }
     }

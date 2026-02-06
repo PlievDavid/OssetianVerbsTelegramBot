@@ -31,10 +31,7 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
             var verb = session.Verbs[session.CurrentIndex];
-            foreach (var item in session.Verbs)
-            {
-                Console.Write(item.Inf + " ");
-            }
+            
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
