@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OssetianVerbsTelegramBot
+namespace OssetianVerbsTelegramBot.ApiClients.Yandex
 {
     public class YandexGptClient
     {
@@ -35,8 +35,8 @@ namespace OssetianVerbsTelegramBot
 
             restRequest.AddJsonBody(new YandexGptRequest()
             {
-                Model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-20b/latest",
-                Instructions = "Пиши по русски",
+                Model = "gpt://b1g8l0frn3gd9j5d3db2/gemma-3-27b-it/latest",
+                Instructions = "Никогда не оставляй сообщение не отвеченным. Форматировать текст не надо. Если не знаешь, говори, что не знаешь. Тебе предоставлен весь контекст разговора, отвечай на последнее!",
                 Input = text,
                 Temperature = 0.3,
                 MaxOutputTokens = 500
@@ -44,7 +44,7 @@ namespace OssetianVerbsTelegramBot
 
             var response = await restClient.ExecuteAsync(restRequest);
             dynamic data = JObject.Parse(response.Content);
-            return data.output[1].content[0].text;
+            return data.output[0].content[0].text;
         }
     }
 }

@@ -13,9 +13,7 @@ namespace OssetianVerbsTelegramBot.Models
         public List<Verb> Verbs { get; private set; }
         public int CurrentIndex { get; set; } = 0;
         public int Score { get; set; } = 0;
-        public ITaskHelper Task { get; set; }
-
-        public bool isGptMode { get; set; }
+        public ITask Task { get; set; }
 
         public int CurrentIndexTranslateTask { get; set; } = 0;
         public int ScoreTranslateTask { get; set; } = 0;
@@ -24,7 +22,7 @@ namespace OssetianVerbsTelegramBot.Models
         public int ScoreDeclinationTask { get; set; } = 0;
         public List<Sentence> Sentences { get; set; } = new List<Sentence>();
 
-        public TestSession(long userId, List<Verb> verbs = null, ITaskHelper task = null)
+        public TestSession(long userId, List<Verb> verbs = null, ITask task = null)
         {
             UserId = userId;
             Verbs = verbs;
