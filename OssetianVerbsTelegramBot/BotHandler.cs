@@ -84,7 +84,7 @@ namespace OssetianVerbsTelegramBot
 
                 case "🤖 Чат-бот (Beta)":
                     chatSessions[message.Chat.Id].IsGptMode = true;
-                    await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
+                    await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                     break;
 
                 case "📋 Типы глагола":
@@ -120,6 +120,8 @@ namespace OssetianVerbsTelegramBot
                 default:
                     if (chatSessions[message.Chat.Id].IsGptMode)
                     {
+                        Console.WriteLine("User(" + message.Chat.Id + " - " + message.From.Username + "): " + message.Text);
+
                         var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
 
                         var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
@@ -127,6 +129,8 @@ namespace OssetianVerbsTelegramBot
                         chatSessions[chatId].ChatHistory += $"User: {ruMessage}\n";
 
                         var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
+
+                        Console.WriteLine("GPT: " + response);
 
                         chatSessions[chatId].ChatHistory += $"GPT: {response}\n";
 
@@ -228,7 +232,7 @@ namespace OssetianVerbsTelegramBot
             };
 
             await _bot.SendMessage(chatId: chatId,
-                text: "Навигация осуществляется с помощью меню👇", replyMarkup: keyboard);
+                text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
 
@@ -257,7 +261,7 @@ namespace OssetianVerbsTelegramBot
             };
 
             await _bot.SendMessage(chatId: chatId,
-                text: "Выберите задание в меню:", replyMarkup: keyboard);
+                text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
 
