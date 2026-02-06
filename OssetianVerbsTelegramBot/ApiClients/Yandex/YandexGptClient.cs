@@ -36,7 +36,7 @@ namespace OssetianVerbsTelegramBot.ApiClients.Yandex
             restRequest.AddJsonBody(new YandexGptRequest()
             {
                 Model = "gpt://b1g8l0frn3gd9j5d3db2/gemma-3-27b-it/latest",
-                Instructions = "Отвечай на все! Никогда не оставляй сообщение не отвеченным. Форматировать текст не надо. Коротко. Если не знаешь, говори, что не знаешь.",
+                Instructions = "Никогда не оставляй сообщение не отвеченным. Форматировать текст не надо. Если не знаешь, говори, что не знаешь. Тебе предоставлен весь контекст разговора, отвечай на последнее!",
                 Input = text,
                 Temperature = 0.3,
                 MaxOutputTokens = 500
