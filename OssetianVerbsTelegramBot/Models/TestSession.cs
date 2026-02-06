@@ -15,8 +15,6 @@ namespace OssetianVerbsTelegramBot.Models
         public int Score { get; set; } = 0;
         public ITask Task { get; set; }
 
-        public bool isGptMode { get; set; }
-
         public int CurrentIndexTranslateTask { get; set; } = 0;
         public int ScoreTranslateTask { get; set; } = 0;
 

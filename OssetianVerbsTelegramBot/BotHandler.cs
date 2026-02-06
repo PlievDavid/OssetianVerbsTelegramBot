@@ -18,7 +18,8 @@ namespace OssetianVerbsTelegramBot
     public class BotHandler
     {
         private readonly TelegramBotClient _bot;
-        private static Dictionary<long, TestSession> Sessions = new();
+        private static Dictionary<long, TestSession> taskSessions = new();
+        private static Dictionary<long, ChatSession> chatSessions = new();
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
@@ -55,6 +56,11 @@ namespace OssetianVerbsTelegramBot
         private async Task HandleMessage(Message message)
         {
             var chatId = message.Chat.Id;
+            if (!chatSessions.ContainsKey(chatId))
+            {
+                chatSessions[message.Chat.Id] = new ChatSession();
+            }
+
             if (helpMessages.ContainsKey(chatId))
             {
                 var messages = helpMessages[chatId];
@@ -72,30 +78,29 @@ namespace OssetianVerbsTelegramBot
 
                 case "Глаголы":
                     await SendVerbMenu(chatId);
-                    Sessions[message.Chat.Id].isGptMode = false;
+                    chatSessions[message.Chat.Id].IsGptMode = false;
                     break;
 
                 case "Чат-бот":
-                    Sessions[message.Chat.Id] = new TestSession(message.Chat.Id);
+                    chatSessions[message.Chat.Id].IsGptMode = true;
                     await _bot.SendMessage(message.Chat.Id, "Режим чат-бота включен ✅");
-                    Sessions[message.Chat.Id].isGptMode = true;
                     break;
 
                 case "📋 Типы глагола":
-                    ITask taskDefineType = new TaskDefineType(_bot, Sessions);
-                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
+                    ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
+                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
                     await taskDefineType.StartTask(message);
                     break;
 
                 case "🖋️ Перевести":
-                    ITask taskTranslate = new TaskTranslate(_bot, Sessions);
-                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
+                    ITask taskTranslate = new TaskTranslate(_bot, taskSessions);
+                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
                     await taskTranslate.StartTask(message);
                     break;
 
                 case "🛠️ Склонение":
-                    ITask taskDeclination = new TaskDeclination(_bot, Sessions);
-                    Sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
+                    ITask taskDeclination = new TaskDeclination(_bot, taskSessions);
+                    taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
                     await taskDeclination.StartTask(message);
                     break;
 
@@ -112,26 +117,20 @@ namespace OssetianVerbsTelegramBot
                     break;
 
                 default:
-                    if (Sessions[message.Chat.Id].isGptMode)
+                    if (chatSessions[message.Chat.Id].IsGptMode)
                     {
                         var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
-
-
-                        var response = await yandexGptClient.SendRequestAsync(await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru"));
-
-                        
-
+                        var response = await yandexGptClient.SendRequestAsync(await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru"));    
                         await _bot.SendMessage(message.Chat.Id, await yandexTranslateClient.TranslateTextAsync(response, "ru", "os"));
-
                         await _bot.DeleteMessage(message.Chat.Id, loadSmile.Id);
 
                     }
                     else
                     {
 
-                        if (Sessions[message.Chat.Id].Sentences.Count != 0)
+                        if (taskSessions[message.Chat.Id].Sentences.Count != 0)
                         {
-                            var task = (TaskDeclination)Sessions[message.Chat.Id].Task;
+                            var task = (TaskDeclination)taskSessions[message.Chat.Id].Task;
                             await task.HandleMessageAnswer(message);
                             break;
                         }
@@ -197,13 +196,13 @@ namespace OssetianVerbsTelegramBot
 
             if (callbackQuery.Data.StartsWith("answer_"))
             {
-                var task = Sessions[callbackQuery.Message.Chat.Id].Task;
+                var task = taskSessions[callbackQuery.Message.Chat.Id].Task;
                 await task.HandleCallbackQuery(callbackQuery);
             }
 
             else
             {
-                var taskTranslate = Sessions[callbackQuery.Message.Chat.Id].Task;
+                var taskTranslate = taskSessions[callbackQuery.Message.Chat.Id].Task;
                 await taskTranslate.HandleCallbackQuery(callbackQuery);
             }
         }

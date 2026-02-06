@@ -35,8 +35,8 @@ namespace OssetianVerbsTelegramBot.ApiClients.Yandex
 
             restRequest.AddJsonBody(new YandexGptRequest()
             {
-                Model = "gpt://b1g8l0frn3gd9j5d3db2/gpt-oss-20b/latest",
-                Instructions = "Пиши по русски",
+                Model = "gpt://b1g8l0frn3gd9j5d3db2/gemma-3-27b-it/latest",
+                Instructions = "Отвечай на все! Никогда не оставляй сообщение не отвеченным. Форматировать текст не надо. Коротко. Если не знаешь, говори, что не знаешь.",
                 Input = text,
                 Temperature = 0.3,
                 MaxOutputTokens = 500
@@ -44,7 +44,7 @@ namespace OssetianVerbsTelegramBot.ApiClients.Yandex
 
             var response = await restClient.ExecuteAsync(restRequest);
             dynamic data = JObject.Parse(response.Content);
-            return data.output[1].content[0].text;
+            return data.output[0].content[0].text;
         }
     }
 }
