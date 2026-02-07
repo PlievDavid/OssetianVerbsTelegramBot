@@ -55,23 +55,22 @@ namespace OssetianVerbsTelegramBot
 
         private async Task HandleMessage(Message message)
         {
-            var chatId = message.Chat.Id;
-
-            if (!chatSessions.ContainsKey(chatId))
-            {
-                chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
-            }
-
-            if (helpMessages.ContainsKey(chatId))
-            {
-                var messages = helpMessages[chatId];
-                await _bot.DeleteMessages(chatId, messages);
-                helpMessages.Remove(chatId);
-            }
-
-
             try
             {
+                var chatId = message.Chat.Id;
+
+                if (!chatSessions.ContainsKey(chatId))
+                {
+                    chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
+                }
+
+                if (helpMessages.ContainsKey(chatId))
+                {
+                    var messages = helpMessages[chatId];
+                    await _bot.DeleteMessages(chatId, messages);
+                    helpMessages.Remove(chatId);
+                }
+            
                 switch (message.Text)
                 {
                     case "/start":
@@ -90,7 +89,7 @@ namespace OssetianVerbsTelegramBot
                         await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                         break;
 
-                    case "📋 Типы глагола":
+                    case "📋 Типы глаголов":
                         ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
                         taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
                         await taskDefineType.StartTask(message);
@@ -125,7 +124,7 @@ namespace OssetianVerbsTelegramBot
                         {
                             Console.WriteLine("User(" + message.Chat.Id + " - " + message.From.Username + "): " + message.Text);
 
-                            var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
+                            var loadSmile = await _bot.SendSticker(chatId, sticker: "CAACAgUAAxkBAAEVynlphwOBCtgySn0lY4gZRq60cHjnFgACFwsAAnpH2FSrntiSYBUw7ToE");
 
                             var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
 
@@ -192,20 +191,20 @@ namespace OssetianVerbsTelegramBot
         {
             var imageFile = File.Open(Path.Combine("Images","declinationRule.jpg"), FileMode.Open);
             var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
-            var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод<'i>\n";
             var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
             var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
             foreach (var verb in firstTypeVerbs)
             {
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
             }
-            var firstTypeMessage = await _bot.SendMessage(id, textVerbs);
-            textVerbs = "Глаголы второго типа(непереходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            var firstTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
+            textVerbs = "<b>Непереходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
             foreach (var verb in secondTypeVerbs)
             {
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
             }
-            var secondTypeMessage = await _bot.SendMessage(id, textVerbs);
+            var secondTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
             return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
         }
 
