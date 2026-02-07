@@ -19,6 +19,7 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
         {
             _sessions = sessions;
             _bot = bot;
+
         }
         public async Task StartTask(Message message)
         {

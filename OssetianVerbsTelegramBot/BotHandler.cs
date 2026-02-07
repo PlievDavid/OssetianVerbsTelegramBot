@@ -70,7 +70,7 @@ namespace OssetianVerbsTelegramBot
                     await _bot.DeleteMessages(chatId, messages);
                     helpMessages.Remove(chatId);
                 }
-            
+
                 switch (message.Text)
                 {
                     case "/start":
@@ -89,7 +89,7 @@ namespace OssetianVerbsTelegramBot
                         await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                         break;
 
-                    case "📋 Типы глаголов":
+                    case "📋 Типы глагола":
                         ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
                         taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
                         await taskDefineType.StartTask(message);
@@ -142,13 +142,20 @@ namespace OssetianVerbsTelegramBot
                         }
                         else
                         {
-                            if (taskSessions[message.Chat.Id].Sentences.Count != 0)
+                            if (taskSessions.ContainsKey(message.Chat.Id))
                             {
-                                var task = (TaskDeclination)taskSessions[message.Chat.Id].Task;
-                                await task.HandleMessageAnswer(message);
-                                break;
+                                if (taskSessions[message.Chat.Id].Sentences.Count != 0)
+                                {
+                                    var task = (TaskDeclination)taskSessions[message.Chat.Id].Task;
+                                    await task.HandleMessageAnswer(message);
+                                    break;
+                                }
                             }
-                            await SendMainMenu(message.Chat.Id);
+                            else
+                            {
+
+                                await SendMainMenu(message.Chat.Id);
+                            }
                         }
                         break;
                 }
@@ -189,22 +196,24 @@ namespace OssetianVerbsTelegramBot
 
         private async Task<int[]> SendHelp(long id)
         {
-            var imageFile = File.Open(Path.Combine("Images","declinationRule.jpg"), FileMode.Open);
-            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
-            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод<'i>\n";
             var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
             var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
+            var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
+
+            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
+
+            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
             foreach (var verb in firstTypeVerbs)
-            {
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
-            }
+
             var firstTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
+
             textVerbs = "<b>Непереходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
             foreach (var verb in secondTypeVerbs)
-            {
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
-            }
+
             var secondTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
+
             return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
         }
 
@@ -269,8 +278,6 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(chatId: chatId,
                 text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
-
-
 
 
 
