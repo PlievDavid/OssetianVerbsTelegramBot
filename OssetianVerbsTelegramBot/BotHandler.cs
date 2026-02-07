@@ -89,7 +89,7 @@ namespace OssetianVerbsTelegramBot
                         await _bot.SendMessage(message.Chat.Id, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                         break;
 
-                    case "📋 Типы глагола":
+                    case "📋 Тип глагола":
                         ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
                         taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
                         await taskDefineType.StartTask(message);
@@ -101,7 +101,7 @@ namespace OssetianVerbsTelegramBot
                         await taskTranslate.StartTask(message);
                         break;
 
-                    case "🛠️ Склонение":
+                    case "🛠️ Спряжение":
                         ITask taskDeclination = new TaskDeclination(_bot, taskSessions);
                         taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
                         await taskDeclination.StartTask(message);
@@ -200,7 +200,7 @@ namespace OssetianVerbsTelegramBot
             var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
             var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
 
-            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
+            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
 
             var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
             foreach (var verb in firstTypeVerbs)
@@ -257,9 +257,9 @@ namespace OssetianVerbsTelegramBot
             {
                 new[]
                 {
-                    new KeyboardButton("📋 Типы глагола"),
+                    new KeyboardButton("📋 Тип глагола"),
                     new KeyboardButton("🖋️ Перевести"),
-                    new KeyboardButton("🛠️ Склонение")
+                    new KeyboardButton("🛠️ Спряжение")
                 },
                 new[]
                 {
