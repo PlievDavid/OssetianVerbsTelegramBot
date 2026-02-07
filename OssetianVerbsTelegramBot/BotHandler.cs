@@ -125,7 +125,7 @@ namespace OssetianVerbsTelegramBot
                         {
                             Console.WriteLine("User(" + message.Chat.Id + " - " + message.From.Username + "): " + message.Text);
 
-                            var loadSmile = await _bot.SendMessage(message.Chat.Id, "⏳");
+                            var loadSmile = await _bot.SendSticker(chatId, sticker: "CAACAgUAAxkBAAEVynlphwOBCtgySn0lY4gZRq60cHjnFgACFwsAAnpH2FSrntiSYBUw7ToE");
 
                             var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
 
