@@ -32,7 +32,6 @@ namespace OssetianVerbsTelegramBot
         public static async Task<List<StatItem>> GetUserStatById(string id)
         {
 
-            Console.WriteLine(dbPath);
             var ans = new List<StatItem> { };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
@@ -57,7 +56,6 @@ namespace OssetianVerbsTelegramBot
         public static async Task FillStatWithList(List<StatItem> list, string id)
         {
 
-            Console.WriteLine(dbPath);
             list = list.OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
             var ans = "";
             foreach (var item in list)
