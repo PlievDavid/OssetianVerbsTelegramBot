@@ -192,7 +192,7 @@ namespace OssetianVerbsTelegramBot
         {
             var imageFile = File.Open(Path.Combine("Images","declinationRule.jpg"), FileMode.Open);
             var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило склонения глаголов в прошедшем времени.");
-            var textVerbs = "Глаголы первого типа(переходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод<i>\n";
             var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
             var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
             foreach (var verb in firstTypeVerbs)
@@ -200,12 +200,12 @@ namespace OssetianVerbsTelegramBot
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
             }
             var firstTypeMessage = await _bot.SendMessage(id, textVerbs);
-            textVerbs = "Глаголы второго типа(непереходные):\nИнфинитив - Морфема в прошедшем времени - Перевод\n";
+            textVerbs = "<b>Непереходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
             foreach (var verb in secondTypeVerbs)
             {
                 textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
             }
-            var secondTypeMessage = await _bot.SendMessage(id, textVerbs);
+            var secondTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
             return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
         }
 

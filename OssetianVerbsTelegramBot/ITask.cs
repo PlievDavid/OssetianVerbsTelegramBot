@@ -11,7 +11,6 @@ namespace OssetianVerbsTelegramBot
     public interface ITask
     {
         Task StartTask(Message message);
-
        
         Task HandleCallbackQuery(CallbackQuery callbackQuery);
 
