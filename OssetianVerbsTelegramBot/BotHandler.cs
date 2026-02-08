@@ -31,6 +31,7 @@ namespace OssetianVerbsTelegramBot
 
         public async Task Start()
         {
+            await DbVerbImport.InitializeVerbs();
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 
@@ -91,19 +92,19 @@ namespace OssetianVerbsTelegramBot
 
                     case "📋 Тип глагола":
                         ITask taskDefineType = new TaskDefineType(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDefineType);
+                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDefineType);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
                         ITask taskTranslate = new TaskTranslate(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskTranslate);
+                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskTranslate);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
                         ITask taskDeclination = new TaskDeclination(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetRandomListVerb(chatId), taskDeclination);
+                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDeclination);
                         await taskDeclination.StartTask(message);
                         break;
 
@@ -196,8 +197,8 @@ namespace OssetianVerbsTelegramBot
 
         private async Task<int[]> SendHelp(long id)
         {
-            var firstTypeVerbs = await DbVerbImport.GetAllFirstTypeVerbs();
-            var secondTypeVerbs = await DbVerbImport.GetAllSecondTypeVerbs();
+            var firstTypeVerbs =  DbVerbImport.GetAllFirstTypeVerbs();
+            var secondTypeVerbs =  DbVerbImport.GetAllSecondTypeVerbs();
             var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
 
             var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
