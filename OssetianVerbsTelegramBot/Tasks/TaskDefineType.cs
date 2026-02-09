@@ -8,7 +8,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace OssetianVerbsTelegramBot.DefineTypeTask
+namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskDefineType: ITask
     {
@@ -37,12 +37,12 @@ namespace OssetianVerbsTelegramBot.DefineTypeTask
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Тип 1 (переходный)", "answer_1"),
+                    InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "answer_1"),
                     
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Тип 2 (непереходный)", "answer_2")
+                    InlineKeyboardButton.WithCallbackData("Тип 2 -тӕн (непереходный)", "answer_2")
                 }
                 
             });

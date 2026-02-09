@@ -12,7 +12,6 @@ namespace OssetianVerbsTelegramBot
 {
     public static class DbUser
     {
-
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         public static async Task<bool> IsExistUser(string id)
         {

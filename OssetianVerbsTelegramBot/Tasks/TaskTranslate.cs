@@ -4,13 +4,12 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace OssetianVerbsTelegramBot.TranslateTask
+namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskTranslate: ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
-        Random rnd = new Random();
 
         public TaskTranslate(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
         {
@@ -35,10 +34,10 @@ namespace OssetianVerbsTelegramBot.TranslateTask
             }
 
             var verb = session.Verbs[session.CurrentIndex];
-            var wrongVerb = await DbVerbImport.GetRandomVerb();
+            var wrongVerb = DbVerbImport.GetRandomVerb();
 
             var twoVerbs = new List<Verb> { verb, wrongVerb };
-            int randomNum = rnd.Next(1, 25) % 2;
+            int randomNum = Random.Shared.Next(1, 25) % 2;
             InlineKeyboardMarkup answers =
                 new InlineKeyboardMarkup(
                     new InlineKeyboardButton(twoVerbs[randomNum].Trans, twoVerbs[randomNum].Trans), 

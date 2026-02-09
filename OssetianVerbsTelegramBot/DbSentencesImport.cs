@@ -12,43 +12,23 @@ namespace OssetianVerbsTelegramBot
     {
 
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
-        static Random rnd = new Random();
-        public static async Task<List<Sentence>> GetAllSentences()
+        public static List<Sentence> AllSentences { get; private set; }
+
+
+        public static async Task InitializeSentences() => AllSentences = await GetAllSentences();
+        public static Sentence GetRandomSentence() => AllSentences[Random.Shared.Next(0, AllSentences.Count)];
+        public static Sentence GetRandomSentenceByVerbInf(string verbInf)
         {
-            var ans = new List<Sentence> { };
-            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
-            {
-                conn.Open();
-                string sql = "SELECT * FROM Sentences";
-                SqliteCommand command = new SqliteCommand(sql, conn);
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    ans.Add(new  Sentence(reader[1].ToString(), reader[2].ToString(), reader[3].ToString()));
-                }
-                conn.Close();
-            }
-            return ans;
+            var sorted = AllSentences.Where(x => x.VerbInf == verbInf).ToList();
+            return sorted[Random.Shared.Next(0,sorted.Count)];
         }
-        public static async Task<Sentence> GetRandomSentence()
+        public static  List<Sentence> GetRandomListSentence(int count = 10)
         {
-            var sentences = await GetAllSentences();
-            return sentences[rnd.Next(0, sentences.Count)];
-        }
-        public static async Task<Sentence> GetRandomSentenceByVerbInf(string verbInf)
-        {
-            var sentences = await GetAllSentences();
-            var sortedSent = sentences.Where(item => item.VerbInf == verbInf).ToList();
-            return sortedSent[rnd.Next(0, sortedSent.Count)];
-        }
-        public static async Task<List<Sentence>> GetRandomListSentence(int count = 10)
-        {
-            var all = await GetAllSentences();
-            var allCount = all.Count;
+            var allCount = AllSentences.Count;
             var list = new List<Sentence>();
             for (int i = 0; i < count; i++)
             {
-                var sentence = await GetRandomSentence();
+                var sentence = GetRandomSentence();
                 if (list.Any(x => x.VerbInf == sentence.VerbInf))
                 {
                     if (count > allCount)
@@ -61,14 +41,32 @@ namespace OssetianVerbsTelegramBot
             }
             return list;
         }
-        public static async Task<List<Sentence>> GetRandomListSentenceByListVerb(List<Verb> verbs)
+        public static List<Sentence> GetRandomListSentenceByListVerb(List<Verb> verbs)
         {
             var list = new List<Sentence>();
             foreach(var verb in verbs)
             {
-                list.Add(await GetRandomSentenceByVerbInf(verb.Inf));
+                list.Add(GetRandomSentenceByVerbInf(verb.Inf));
             }
             return list;
+        }
+
+        public static async Task<List<Sentence>> GetAllSentences()
+        {
+            var ans = new List<Sentence> { };
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
+            {
+                conn.Open();
+                string sql = "SELECT * FROM Sentences";
+                SqliteCommand command = new SqliteCommand(sql, conn);
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    ans.Add(new Sentence(reader[1].ToString(), reader[2].ToString(), reader[3].ToString()));
+                }
+                conn.Close();
+            }
+            return ans;
         }
 
     }
