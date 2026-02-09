@@ -8,7 +8,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace OssetianVerbsTelegramBot.DefineTypeTask
+namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskDefineType: ITask
     {

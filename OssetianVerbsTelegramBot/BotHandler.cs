@@ -1,8 +1,6 @@
 ﻿using OssetianVerbsTelegramBot.ApiClients.Yandex;
-using OssetianVerbsTelegramBot.DeclinationTask;
-using OssetianVerbsTelegramBot.DefineTypeTask;
 using OssetianVerbsTelegramBot.Models;
-using OssetianVerbsTelegramBot.TranslateTask;
+using OssetianVerbsTelegramBot.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +30,7 @@ namespace OssetianVerbsTelegramBot
         public async Task Start()
         {
             await DbVerbImport.InitializeVerbs();
+            await DbSentencesImport.InitializeSentences();
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 

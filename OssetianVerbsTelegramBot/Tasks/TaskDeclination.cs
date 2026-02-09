@@ -8,7 +8,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace OssetianVerbsTelegramBot.DeclinationTask
+namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskDeclination: ITask
     {
@@ -38,7 +38,7 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
                 return;
             }
 
-            var sentence = await DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndex].Inf);
+            var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndex].Inf);
             _sessions[chatId].Sentences.Add(sentence);
             await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
@@ -65,7 +65,7 @@ namespace OssetianVerbsTelegramBot.DeclinationTask
                         await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                         break;
                     }
-                    if (i==(temp.Count()-1))
+                    if (i==temp.Count()-1)
                     {
                         await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, true);
                         await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);

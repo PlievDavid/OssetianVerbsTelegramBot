@@ -13,7 +13,7 @@ namespace OssetianVerbsTelegramBot
     public static class DbVerbImport
     {
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
-        public static List<Verb>? AllVerbs { get; private set; }
+        public static List<Verb> AllVerbs { get; private set; }
 
         public static async Task InitializeVerbs() => AllVerbs = await GetAllVerbs();
         public static List<Verb> GetAllFirstTypeVerbs() => AllVerbs.Where(verb => verb.Type == 1).ToList();
