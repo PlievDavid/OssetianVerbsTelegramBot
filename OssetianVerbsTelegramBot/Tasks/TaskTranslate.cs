@@ -10,7 +10,6 @@ namespace OssetianVerbsTelegramBot.Tasks
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
-        Random rnd = new Random();
 
         public TaskTranslate(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
         {
@@ -38,7 +37,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             var wrongVerb = DbVerbImport.GetRandomVerb();
 
             var twoVerbs = new List<Verb> { verb, wrongVerb };
-            int randomNum = rnd.Next(1, 25) % 2;
+            int randomNum = Random.Shared.Next(1, 25) % 2;
             InlineKeyboardMarkup answers =
                 new InlineKeyboardMarkup(
                     new InlineKeyboardButton(twoVerbs[randomNum].Trans, twoVerbs[randomNum].Trans), 
