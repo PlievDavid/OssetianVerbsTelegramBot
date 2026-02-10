@@ -221,16 +221,26 @@ namespace OssetianVerbsTelegramBot
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             await _bot.AnswerCallbackQuery(callbackQuery.Id);
+            var chatId = callbackQuery.Message.Chat.Id;
+            var callBackData = callbackQuery.Data;
 
-            if (callbackQuery.Data.StartsWith("answer_"))
+            if (callBackData == null) return;
+
+            if (!taskSessions.ContainsKey(chatId)) //чтобы при перезапуске бота старые кнопки не вызывали ошибку
+                return;
+
+            if (callBackData.ToLower().Contains("oldbutton"))
+                return;
+
+            if (callBackData.StartsWith("answer_"))
             {
-                var task = taskSessions[callbackQuery.Message.Chat.Id].Task;
+                var task = taskSessions[chatId].Task;
                 await task.HandleCallbackQuery(callbackQuery);
             }
 
             else
             {
-                var taskTranslate = taskSessions[callbackQuery.Message.Chat.Id].Task;
+                var taskTranslate = taskSessions[chatId].Task;
                 await taskTranslate.HandleCallbackQuery(callbackQuery);
             }
         }

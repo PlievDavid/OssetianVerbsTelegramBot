@@ -8,7 +8,6 @@ namespace OssetianVerbsTelegramBot
 {
     public static class ComplimentGenerator
     {
-        static Random rnd = new Random();
 
         static string[] Compliments = {
                 "Правильно! 👍",
@@ -35,7 +34,7 @@ namespace OssetianVerbsTelegramBot
 
         static public string GetRandomCompliment()
         {
-            return Compliments[rnd.Next(Compliments.Length)];
+            return Compliments[Random.Shared.Next(Compliments.Length)];
         }
     }
 }

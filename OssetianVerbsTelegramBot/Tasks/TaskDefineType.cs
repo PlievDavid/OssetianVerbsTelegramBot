@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    internal class TaskDefineType: ITask
+    internal class TaskDefineType : ITask
     {
         readonly Dictionary<long, TestSession> _sessions;
         readonly TelegramBotClient _bot;
@@ -32,19 +32,19 @@ namespace OssetianVerbsTelegramBot.Tasks
         public async Task SendNextQuestion(long chatId, TestSession session)
         {
             var verb = session.Verbs[session.CurrentIndex];
-            
+
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "answer_1"),
-                    
+
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Тип 2 -тӕн (непереходный)", "answer_2")
                 }
-                
+
             });
             await _bot.SendMessage(
                 chatId,
@@ -65,25 +65,53 @@ namespace OssetianVerbsTelegramBot.Tasks
             {
                 session.Score++;
                 await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
+
+                await UpdateOldMessage(callbackQuery,true);
                 await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
             }
             else
             {
                 await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
+                await UpdateOldMessage(callbackQuery,false);
                 await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
             }
 
             session.CurrentIndex++;
-
             if (session.CurrentIndex < session.Verbs.Count)
-                await SendNextQuestion(chatId,session);
+                await SendNextQuestion(chatId, session);
 
             else
             {
                 await _bot.SendMessage(chatId, $"Тест завершён!\nРезультат: {session.Score}/10");
                 _sessions.Remove(chatId);
             }
+        }
+
+        private async Task UpdateOldMessage(CallbackQuery callback, bool isRight)
+        {
+            var msg = callback.Message;
+            if (msg == null) return;
+            var text = "";
+
+            if (msg?.ReplyMarkup is InlineKeyboardMarkup keyboard)
+            {
+                foreach (var row in keyboard.InlineKeyboard)
+                {
+                    foreach (var button in row)
+                    {
+                        if (button.CallbackData == callback.Data)
+                            text = button.Text;
+                    }
+                }
+            }
+            else return;
+            text += isRight ? "✅" : "❌";
+            var newKeyboard = new InlineKeyboardMarkup(new[]
+            {
+                InlineKeyboardButton.WithCallbackData(text, "oldButton")
+            });
+            await _bot.EditMessageReplyMarkup(msg.Chat.Id, msg.MessageId, newKeyboard);
         }
     }
 }
