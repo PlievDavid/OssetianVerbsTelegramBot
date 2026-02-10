@@ -1,4 +1,5 @@
 ﻿using OssetianVerbsTelegramBot.Models;
+using OssetianVerbsTelegramBot.Tasks.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,26 +11,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    internal class TaskDefineType : ITask
+    internal class TaskDefineType : BaseTask, ICallBackTask
     {
-        readonly Dictionary<long, TestSession> _sessions;
-        readonly TelegramBotClient _bot;
+        public TaskDefineType(TelegramBotClient bot, Dictionary<long, TestSession> sessions) : base(bot, sessions) { }
 
-        public TaskDefineType(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
-        {
-            _sessions = sessions;
-            _bot = bot;
-
-        }
-        public async Task StartTask(Message message)
-        {
-            var chatId = message.Chat.Id;
-
-            var session = _sessions[chatId];
-
-            await SendNextQuestion(chatId, session);
-        }
-        public async Task SendNextQuestion(long chatId, TestSession session)
+        public override async Task SendNextQuestion(long chatId, TestSession session)
         {
             var verb = session.Verbs[session.CurrentIndex];
 
@@ -56,35 +42,39 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
-            var chatId = callbackQuery.Message.Chat.Id;
-            int answer = int.Parse(callbackQuery.Data.Split('_')[1]);
-            var session = _sessions[callbackQuery.Message.Chat.Id];
-            var verb = session.Verbs[session.CurrentIndex];
-
-            if (answer == verb.Type)
+            var callBackData = callbackQuery.Data;
+            if (callBackData.StartsWith("answer_"))
             {
-                session.Score++;
-                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
+                var chatId = callbackQuery.Message.Chat.Id;
+                int answer = int.Parse(callbackQuery.Data.Split('_')[1]);
+                var session = _sessions[callbackQuery.Message.Chat.Id];
+                var verb = session.Verbs[session.CurrentIndex];
 
-                await UpdateOldMessage(callbackQuery,true);
-                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                if (answer == verb.Type)
+                {
+                    session.Score++;
+                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
 
-            }
-            else
-            {
-                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
-                await UpdateOldMessage(callbackQuery,false);
-                await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
-            }
+                    await UpdateOldMessage(callbackQuery, true);
+                    await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
-            session.CurrentIndex++;
-            if (session.CurrentIndex < session.Verbs.Count)
-                await SendNextQuestion(chatId, session);
+                }
+                else
+                {
+                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
+                    await UpdateOldMessage(callbackQuery, false);
+                    await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
+                }
 
-            else
-            {
-                await _bot.SendMessage(chatId, $"Тест завершён!\nРезультат: {session.Score}/10");
-                _sessions.Remove(chatId);
+                session.CurrentIndex++;
+                if (session.CurrentIndex < session.Verbs.Count)
+                    await SendNextQuestion(chatId, session);
+
+                else
+                {
+                    await _bot.SendMessage(chatId, $"Тест завершён!\nРезультат: {session.Score}/10");
+                    _sessions.Remove(chatId);
+                }
             }
         }
 

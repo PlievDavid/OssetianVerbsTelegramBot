@@ -17,9 +17,6 @@ internal class Program
     }
 
 
-
-
-
    
     static public void FillVerbsDb(string path)
     {

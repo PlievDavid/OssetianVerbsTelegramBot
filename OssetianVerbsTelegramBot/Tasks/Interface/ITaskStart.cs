@@ -6,14 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 
-namespace OssetianVerbsTelegramBot
+namespace OssetianVerbsTelegramBot.Tasks.Interface
 {
-    public interface ITask
+    public interface ITaskStart
     {
         Task StartTask(Message message);
-       
-        Task HandleCallbackQuery(CallbackQuery callbackQuery);
-
-        Task SendNextQuestion(long chatId, TestSession session);
     }
 }

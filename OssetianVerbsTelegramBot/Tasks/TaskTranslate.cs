@@ -1,30 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OssetianVerbsTelegramBot.Models;
+using OssetianVerbsTelegramBot.Tasks.Interface;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    internal class TaskTranslate: ITask
+    internal class TaskTranslate : BaseTask, ICallBackTask
     {
-        readonly Dictionary<long, TestSession> _sessions;
-        readonly TelegramBotClient _bot;
+        public TaskTranslate(TelegramBotClient bot, Dictionary<long, TestSession> sessions) : base(bot, sessions) { }
 
-        public TaskTranslate(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
-        {
-            _sessions = sessions;
-            _bot = bot;
-        }
-        public async Task StartTask(Message message)
-        {
-            var chatId = message.Chat.Id;
-
-            var session = _sessions[chatId];
-
-           await SendNextQuestion(chatId, session);
-        }
-        public async Task SendNextQuestion(long chatId, TestSession session)
+        public override async Task SendNextQuestion(long chatId, TestSession session)
         {
             
             if (session.CurrentIndex > session.Verbs.Count-1)
@@ -47,7 +34,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
-        public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
+        public  async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             var chatId = callbackQuery.Message.Chat.Id;
 

@@ -1,4 +1,5 @@
 ﻿using OssetianVerbsTelegramBot.Models;
+using OssetianVerbsTelegramBot.Tasks.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,27 +11,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    internal class TaskDeclination: ITask
+    internal class TaskDeclination: BaseTask, IMessageTask
     {
-        readonly Dictionary<long, TestSession> _sessions;
-        readonly TelegramBotClient _bot;
-
-        public TaskDeclination(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
+        public TaskDeclination(TelegramBotClient bot, Dictionary<long, TestSession> sessions):base(bot, sessions) { }
+        public override async Task SendNextQuestion(long chatId, TestSession session)
         {
-            _sessions = sessions;
-            _bot = bot;
-        }
-        public async Task StartTask(Message message)
-        {
-            var chatId = message.Chat.Id;
-
-            var session = _sessions[chatId];
-
-            await SendNextQuestion(chatId, session);
-        }
-        public async Task SendNextQuestion(long chatId, TestSession session)
-        {
-
             if (session.CurrentIndex > session.Verbs.Count - 1)
             {
                 await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.Score}/10");
@@ -43,22 +28,20 @@ namespace OssetianVerbsTelegramBot.Tasks
             await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
-        public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
-        {
-            
-        }
         public async Task HandleMessageAnswer(Message message)
         {
             var chatId = message.Chat.Id;
 
             var session = _sessions[chatId];
-            var rightAns = session.Sentences[session.CurrentIndex].Ossetian;
+            var rightAns = session.Sentences[session.CurrentIndex].Ossetian.ToLower();
+
+            string msgText = message.Text.ToLower();
             if (rightAns.Contains(","))
             {
                 var temp = rightAns.Split(", ");
-                for(int i = 0;i<temp.Count();i++)
+                for (int i = 0; i < temp.Length; i++)
                 {
-                    if (message.Text == temp[i])
+                    if (msgText == temp[i])
                     {
                         session.Score++;
                         await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
@@ -74,7 +57,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             }
             else
             {
-                if (message.Text == rightAns)
+                if (msgText == rightAns)
                 {
                     session.Score++;
                     await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
