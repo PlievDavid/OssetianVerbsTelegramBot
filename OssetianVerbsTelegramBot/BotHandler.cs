@@ -22,6 +22,7 @@ namespace OssetianVerbsTelegramBot
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
+        private string[] admins = { "946534275" };
 
         public BotHandler(string token)
         {
@@ -92,19 +93,16 @@ namespace OssetianVerbsTelegramBot
 
                     case "📋 Тип глагола":
                         ITaskStart taskDefineType = new TaskDefineType(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId,await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDefineType);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
                         ITaskStart taskTranslate = new TaskTranslate(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskTranslate);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
                         ITaskStart taskDeclination = new TaskDeclination(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDeclination);
                         await taskDeclination.StartTask(message);
                         break;
 
@@ -133,7 +131,7 @@ namespace OssetianVerbsTelegramBot
 
                             var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
 
-                           Console.WriteLine("GPT: " + response);
+                            Console.WriteLine("GPT: " + response);
 
                             chatSessions[chatId].AddHistory($"GPT: {response}");
 
@@ -194,8 +192,8 @@ namespace OssetianVerbsTelegramBot
 
         private async Task<int[]> SendHelp(long id)
         {
-            var firstTypeVerbs =  DbVerbImport.GetAllFirstTypeVerbs();
-            var secondTypeVerbs =  DbVerbImport.GetAllSecondTypeVerbs();
+            var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
+            var secondTypeVerbs = DbVerbImport.GetAllSecondTypeVerbs();
             var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
 
             var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
@@ -245,6 +243,18 @@ namespace OssetianVerbsTelegramBot
             {
                 ResizeKeyboard = true
             };
+            if (admins.Contains(chatId.ToString()))
+            {
+                keyboard = new ReplyKeyboardMarkup(new[]{
+                new[] { new KeyboardButton("📝 Глаголы") },
+                new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
+                new[] {new KeyboardButton("💻АДМИНКА💻")},
+            })
+                {
+                    ResizeKeyboard = true
+                };
+            }
+
 
             await _bot.SendMessage(chatId: chatId,
                 text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);

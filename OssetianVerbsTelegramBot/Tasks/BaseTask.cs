@@ -19,6 +19,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         public async Task StartTask(Message message)
         {
             var chatId = message.Chat.Id;
+            _sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), this);
 
             var session = _sessions[chatId];
 
