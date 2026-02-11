@@ -129,15 +129,16 @@ namespace OssetianVerbsTelegramBot
 
                             var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
 
-                            chatSessions[chatId].ChatHistory += $"User: {ruMessage}\n";
+                            chatSessions[chatId].AddHistory($"User: {ruMessage}");
 
                             var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
 
-                            Console.WriteLine("GPT: " + response);
+                           Console.WriteLine("GPT: " + response);
 
-                            chatSessions[chatId].ChatHistory += $"GPT: {response}\n";
+                            chatSessions[chatId].AddHistory($"GPT: {response}");
 
                             await _bot.SendMessage(chatId, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
+
 
                             await _bot.DeleteMessage(chatId, loadSmile.Id);
                         }
