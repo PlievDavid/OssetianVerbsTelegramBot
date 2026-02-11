@@ -92,19 +92,19 @@ namespace OssetianVerbsTelegramBot
 
                     case "📋 Тип глагола":
                         ITaskStart taskDefineType = new TaskDefineType(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDefineType);
+                        taskSessions[chatId] = new TestSession(chatId,await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDefineType);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
                         ITaskStart taskTranslate = new TaskTranslate(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskTranslate);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskTranslate);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
                         ITaskStart taskDeclination = new TaskDeclination(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDeclination);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDeclination);
                         await taskDeclination.StartTask(message);
                         break;
 
