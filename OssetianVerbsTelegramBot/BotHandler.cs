@@ -92,19 +92,19 @@ namespace OssetianVerbsTelegramBot
 
                     case "📋 Тип глагола":
                         ITaskStart taskDefineType = new TaskDefineType(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDefineType);
+                        taskSessions[chatId] = new TestSession(chatId,await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDefineType);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
                         ITaskStart taskTranslate = new TaskTranslate(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskTranslate);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskTranslate);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
                         ITaskStart taskDeclination = new TaskDeclination(_bot, taskSessions);
-                        taskSessions[chatId] = new TestSession(chatId, DbVerbImport.GetRandomListVerb(), taskDeclination);
+                        taskSessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), taskDeclination);
                         await taskDeclination.StartTask(message);
                         break;
 
@@ -129,15 +129,16 @@ namespace OssetianVerbsTelegramBot
 
                             var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
 
-                            chatSessions[chatId].ChatHistory += $"User: {ruMessage}\n";
+                            chatSessions[chatId].AddHistory($"User: {ruMessage}");
 
                             var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
 
-                            Console.WriteLine("GPT: " + response);
+                           Console.WriteLine("GPT: " + response);
 
-                            chatSessions[chatId].ChatHistory += $"GPT: {response}\n";
+                            chatSessions[chatId].AddHistory($"GPT: {response}");
 
                             await _bot.SendMessage(chatId, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
+
 
                             await _bot.DeleteMessage(chatId, loadSmile.Id);
                         }
