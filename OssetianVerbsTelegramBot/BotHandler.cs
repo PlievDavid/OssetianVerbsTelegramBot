@@ -17,12 +17,12 @@ namespace OssetianVerbsTelegramBot
     public class BotHandler
     {
         private readonly TelegramBotClient _bot;
-        private static Dictionary<long, TestSession> taskSessions = new();
-        private static Dictionary<long, ChatSession> chatSessions = new();
+        private static Dictionary<long, TestSession> _taskSessions = new();
+        private static Dictionary<long, ChatSession> _chatSessions = new();
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
-        private long[] admins = { 946534275 };
+        private long[] admins = { 946534275, 2033844706, 6242358847 };
 
         public BotHandler(string token)
         {
@@ -61,10 +61,12 @@ namespace OssetianVerbsTelegramBot
             try
             {
                 var chatId = message.Chat.Id;
+                if (!DbUser.IsExistUser(chatId))
+                    await DbUser.InitialiseUser(message);
 
-                if (!chatSessions.ContainsKey(chatId))
+                if (!_chatSessions.ContainsKey(chatId))
                 {
-                    chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
+                    _chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
                 }
 
                 if (helpMessages.ContainsKey(chatId))
@@ -84,26 +86,26 @@ namespace OssetianVerbsTelegramBot
 
                     case "📝 Глаголы":
                         await SendVerbMenu(chatId);
-                        chatSessions[chatId].IsGptMode = false;
+                        _chatSessions[chatId].IsGptMode = false;
                         break;
 
                     case "🤖 Чат-бот (Beta)":
-                        chatSessions[chatId].IsGptMode = true;
+                        _chatSessions[chatId].IsGptMode = true;
                         await _bot.SendMessage(chatId, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                         break;
 
                     case "📋 Тип глагола":
-                        ITaskState taskDefineType = new TaskDefineType(_bot, taskSessions);
+                        ITaskState taskDefineType = new TaskDefineType(_bot, _taskSessions);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
-                        ITaskState taskTranslate = new TaskTranslate(_bot, taskSessions);
+                        ITaskState taskTranslate = new TaskTranslate(_bot, _taskSessions);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
-                        ITaskState taskDeclination = new TaskDeclination(_bot, taskSessions);
+                        ITaskState taskDeclination = new TaskDeclination(_bot, _taskSessions);
                         await taskDeclination.StartTask(message);
                         break;
 
@@ -118,18 +120,18 @@ namespace OssetianVerbsTelegramBot
                     case "🔙 В главное меню":
                         await SendMainMenu(chatId);
                         break;
-                    case "💻АДМИНКА💻":
+                    case "👑АДМИНКА👑":
                         await SendAdminMenu(chatId);
                         break;
 
 
-                    case "📝 BackUp Базы данных":
+                    case "📝 Backup Базы данных":
                         if(admins.Contains(chatId))
                             await DownloadSqliteDatabaseAsync(chatId);
                         break;
 
                     default:
-                        if (chatSessions[chatId].IsGptMode)
+                        if (_chatSessions[chatId].IsGptMode)
                         {
                             Console.WriteLine("User(" + chatId + " - " + message.From.Username + "): " + message.Text);
 
@@ -137,13 +139,13 @@ namespace OssetianVerbsTelegramBot
 
                             var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
 
-                            chatSessions[chatId].AddHistory($"User: {ruMessage}");
+                            _chatSessions[chatId].AddHistory($"User: {ruMessage}");
 
-                            var response = await yandexGptClient.SendRequestAsync(chatSessions[chatId].ChatHistory);
+                            var response = await yandexGptClient.SendRequestAsync(_chatSessions[chatId].ChatHistory);
 
                             Console.WriteLine("GPT: " + response);
 
-                            chatSessions[chatId].AddHistory($"GPT: {response}");
+                            _chatSessions[chatId].AddHistory($"GPT: {response}");
 
                             await _bot.SendMessage(chatId, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
 
@@ -152,10 +154,10 @@ namespace OssetianVerbsTelegramBot
                         }
                         else
                         {
-                            if (taskSessions.ContainsKey(chatId))
+                            if (_taskSessions.ContainsKey(chatId))
                             {
-                                var task = taskSessions[chatId].Task;
-                                if (taskSessions[chatId].Sentences.Count != 0 && task is IMessageTask msgTask)
+                                var task = _taskSessions[chatId].Task;
+                                if (_taskSessions[chatId].Sentences.Count != 0 && task is IMessageTask msgTask)
                                     await msgTask.HandleMessageAnswer(message);
                             }
                             else
@@ -232,13 +234,13 @@ namespace OssetianVerbsTelegramBot
 
             if (callBackData == null) return;
 
-            if (!taskSessions.ContainsKey(chatId)) //чтобы при перезапуске бота старые кнопки не вызывали ошибку
+            if (!_taskSessions.ContainsKey(chatId)) //чтобы при перезапуске бота старые кнопки не вызывали ошибку
                 return;
 
             if (callBackData.ToLower().Contains("oldbutton"))
                 return;
 
-            var task = taskSessions[chatId].Task;
+            var task = _taskSessions[chatId].Task;
             if (task is ICallBackTask taskCallBack)
                 await taskCallBack.HandleCallbackQuery(callbackQuery);
         }
@@ -258,7 +260,7 @@ namespace OssetianVerbsTelegramBot
                 keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
                 new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
-                new[] {new KeyboardButton("💻АДМИНКА💻")},
+                new[] {new KeyboardButton("👑АДМИНКА👑")},
             })
                 {
                     ResizeKeyboard = true
@@ -273,7 +275,7 @@ namespace OssetianVerbsTelegramBot
         private async Task SendAdminMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
-                new[] { new KeyboardButton("📝 BackUp Базы данных") },
+                new[] { new KeyboardButton("📝 Backup Базы данных") },
                 new[] { new KeyboardButton("🔙 В главное меню") }
             })
             {
@@ -314,7 +316,6 @@ namespace OssetianVerbsTelegramBot
         public async Task DownloadSqliteDatabaseAsync(long adminChatId)
         {
             var dbPath = DbVerbImport.dbPath;
-            Console.WriteLine(dbPath);
 
             if (!File.Exists(dbPath))
             {

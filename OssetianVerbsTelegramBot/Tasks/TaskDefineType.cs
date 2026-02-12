@@ -24,7 +24,6 @@ namespace OssetianVerbsTelegramBot.Tasks
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "answer_1"),
-
                 },
                 new[]
                 {
@@ -72,9 +71,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
                 else
                 {
-                    await _bot.SendMessage(chatId, $"Тест завершён!\nРезультат: {session.Score}/10");
-                    await DbUser.FillStat(chatId.ToString());
-                    _sessions.Remove(chatId);
+                    await EndTask(chatId);
                 }
             }
         }

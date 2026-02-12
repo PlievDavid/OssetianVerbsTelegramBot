@@ -14,9 +14,8 @@ namespace OssetianVerbsTelegramBot
     {
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         private static Dictionary<string,List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
-        public static async Task<bool> IsExistUser(string id)
-        public static readonly HashSet<long> usersId = new HashSet<long>();
-        public static bool IsExistUser(long id) => usersId.Contains(id);
+        public static readonly HashSet<long> allUsersId = new HashSet<long>();
+        public static bool IsExistUser(long id) => allUsersId.Contains(id);
 
         public static async Task InitializeAllUsers()
         {
@@ -27,15 +26,13 @@ namespace OssetianVerbsTelegramBot
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
-                    usersId.Add(reader.GetInt64(0));
+                    allUsersId.Add(reader.GetInt64(0));
                 conn.Close();
-                Console.WriteLine(usersId.Count);
             }
         }
 
         public static async Task<List<StatItem>> GetUserStatById(string id)
         {
-
             var ans = new List<StatItem> { };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
@@ -83,7 +80,7 @@ namespace OssetianVerbsTelegramBot
         }
         public static async Task StartStatUpdate(string id)
         {
-            tempStat.Add(id,await GetUserStatById(id));
+            tempStat[id] = await GetUserStatById(id);
         }
         public static async Task UpdateUserStat(string id, string verb, bool IsError)
         {

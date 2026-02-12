@@ -5,7 +5,7 @@ using Telegram.Bot.Types;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    public abstract class BaseTask : ITaskStart
+    public abstract class BaseTask : ITaskState
     {
         protected readonly Dictionary<long, TestSession> _sessions;
         protected readonly TelegramBotClient _bot;
@@ -29,5 +29,12 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         //этот метод нужно обязательно реализовать в наследнике
         public abstract Task SendNextQuestion(long chatId, TestSession session);
+
+        public virtual async Task EndTask(long chatId)
+        {
+            await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_sessions[chatId].Score}/10");
+            await DbUser.FillStat(chatId.ToString());
+            _sessions.Remove(chatId);
+        }
     }
 }
