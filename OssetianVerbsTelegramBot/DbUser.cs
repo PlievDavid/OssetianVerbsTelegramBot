@@ -104,6 +104,7 @@ namespace OssetianVerbsTelegramBot
         {
             if (! IsExistUser(msg.Chat.Id))
             {
+                allUsersId.Add(msg.Chat.Id);
                 using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
