@@ -22,7 +22,7 @@ namespace OssetianVerbsTelegramBot
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
-        private string[] admins = { "946534275" };
+        private long[] admins = { 946534275 };
 
         public BotHandler(string token)
         {
@@ -116,6 +116,15 @@ namespace OssetianVerbsTelegramBot
 
                     case "🔙 В главное меню":
                         await SendMainMenu(chatId);
+                        break;
+                    case "💻АДМИНКА💻":
+                        await SendAdminMenu(chatId);
+                        break;
+
+
+                    case "📝 BackUp Базы данных":
+                        if(admins.Contains(chatId))
+                            await DownloadSqliteDatabaseAsync(chatId);
                         break;
 
                     default:
@@ -243,7 +252,7 @@ namespace OssetianVerbsTelegramBot
             {
                 ResizeKeyboard = true
             };
-            if (admins.Contains(chatId.ToString()))
+            if (admins.Contains(chatId))
             {
                 keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
@@ -260,6 +269,18 @@ namespace OssetianVerbsTelegramBot
                 text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
+        private async Task SendAdminMenu(long chatId)
+        {
+            var keyboard = new ReplyKeyboardMarkup(new[]{
+                new[] { new KeyboardButton("📝 BackUp Базы данных") },
+                new[] { new KeyboardButton("🔙 В главное меню") }
+            })
+            {
+                ResizeKeyboard = true
+            };
+            await _bot.SendMessage(chatId: chatId,
+               text: "Добро пожаловать🛠️", replyMarkup: keyboard, parseMode: ParseMode.Html);
+        }
 
         private async Task SendVerbMenu(long chatId)
         {
@@ -289,7 +310,37 @@ namespace OssetianVerbsTelegramBot
                 text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
+        public async Task DownloadSqliteDatabaseAsync(long adminChatId)
+        {
+            var dbPath = DbVerbImport.dbPath;
+            Console.WriteLine(dbPath);
 
+            if (!File.Exists(dbPath))
+            {
+                await _bot.SendMessage(adminChatId, "❌ База данных не найдена");
+                return;
+            }
+
+            // Делаем копию, так как файл может быть заблокирован SQLite
+            var tempDbPath = Path.GetTempFileName();
+            try
+            {
+                File.Copy(dbPath, tempDbPath, overwrite: true);
+
+                await using var stream = File.OpenRead(tempDbPath);
+                await _bot.SendDocument(
+                    adminChatId,
+                    new InputFileStream(stream, $"database_{DateTime.Now:yyyy-MM-dd}.db"),
+                    caption: $"🗄 <b>SQLite Database</b>\n📊 Размер: {new FileInfo(dbPath).Length / 1024:N0} KB",
+                    parseMode: ParseMode.Html
+                );
+            }
+            finally
+            {
+                if (File.Exists(tempDbPath))
+                    File.Delete(tempDbPath);
+            }
+        }
 
         private Task ErrorHandler(ITelegramBotClient bot, Exception exception, CancellationToken ct)
         {
