@@ -17,6 +17,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             if (session.CurrentIndex > session.Verbs.Count-1)
             {
                 await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {session.Score}/10");
+                await DbUser.FillStat(chatId.ToString());
                 return;
             }
 

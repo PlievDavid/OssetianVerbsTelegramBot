@@ -13,6 +13,8 @@ namespace OssetianVerbsTelegramBot
     public static class DbUser
     {
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
+        private static Dictionary<string,List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
+        public static async Task<bool> IsExistUser(string id)
         public static readonly HashSet<long> usersId = new HashSet<long>();
         public static bool IsExistUser(long id) => usersId.Contains(id);
 
@@ -55,10 +57,11 @@ namespace OssetianVerbsTelegramBot
             }
             return ans;
         }
-        public static async Task FillStatWithList(List<StatItem> list, string id)
+        public static async Task FillStat(string id)
         {
 
-            list = list.OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
+            var list = tempStat[id].OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
+            tempStat.Remove(id);
             var ans = "";
             foreach (var item in list)
             {
@@ -78,24 +81,26 @@ namespace OssetianVerbsTelegramBot
                 }
             }
         }
+        public static async Task StartStatUpdate(string id)
+        {
+            tempStat.Add(id,await GetUserStatById(id));
+        }
         public static async Task UpdateUserStat(string id, string verb, bool IsError)
         {
-            var stat = await GetUserStatById(id);
-            if (stat.FirstOrDefault(item => item.Verb == verb) == null)
+            if (tempStat[id].FirstOrDefault(item => item.Verb == verb) == null)
             {
                 if (IsError)
-                    stat.Add(new StatItem(verb, "0", "1"));
+                    tempStat[id].Add(new StatItem(verb, "0", "1"));
                 else
-                    stat.Add(new StatItem(verb, "1", "1"));
+                    tempStat[id].Add(new StatItem(verb, "1", "1"));
             }
             else
             {
                 if (IsError)
-                    stat.First(item => item.Verb == verb).IncrementCount();
+                    tempStat[id].First(item => item.Verb == verb).IncrementCount();
                 else
-                    stat.First(item => item.Verb == verb).IncrementRightCount();
+                    tempStat[id].First(item => item.Verb == verb).IncrementRightCount();
             }
-            await FillStatWithList(stat, id);
         }
 
         static public async Task InitialiseUser(Message msg)
