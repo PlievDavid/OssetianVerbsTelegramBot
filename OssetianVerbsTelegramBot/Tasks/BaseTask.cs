@@ -22,7 +22,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             _sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), this);
 
             var session = _sessions[chatId];
-
+            await DbUser.StartStatUpdate(chatId.ToString());
             await SendNextQuestion(chatId, session);
         }
 
