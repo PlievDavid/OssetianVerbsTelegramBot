@@ -13,21 +13,24 @@ namespace OssetianVerbsTelegramBot
     public static class DbUser
     {
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
-        public static async Task<bool> IsExistUser(string id)
+        public static readonly HashSet<long> usersId = new HashSet<long>();
+        public static bool IsExistUser(long id) => usersId.Contains(id);
+
+        public static async Task InitializeAllUsers()
         {
-            var ans = false;
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
-                string sql = $"SELECT * FROM Users WHERE Id = '{id}'";
+                string sql = "SELECT Id FROM Users";
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = command.ExecuteReader();
-                if (reader.Read())
-                    ans = true;
+                while (reader.Read())
+                    usersId.Add(reader.GetInt64(0));
                 conn.Close();
+                Console.WriteLine(usersId.Count);
             }
-            return ans;
         }
+
         public static async Task<List<StatItem>> GetUserStatById(string id)
         {
 
@@ -97,7 +100,7 @@ namespace OssetianVerbsTelegramBot
 
         static public async Task InitialiseUser(Message msg)
         {
-            if (!(await DbUser.IsExistUser(msg.Chat.Id.ToString())))
+            if (! IsExistUser(msg.Chat.Id))
             {
                 using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {

@@ -33,6 +33,7 @@ namespace OssetianVerbsTelegramBot
         {
             await DbVerbImport.InitializeVerbs();
             await DbSentencesImport.InitializeSentences();
+            await DbUser.InitializeAllUsers();
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 
@@ -92,17 +93,17 @@ namespace OssetianVerbsTelegramBot
                         break;
 
                     case "📋 Тип глагола":
-                        ITaskStart taskDefineType = new TaskDefineType(_bot, taskSessions);
+                        ITaskState taskDefineType = new TaskDefineType(_bot, taskSessions);
                         await taskDefineType.StartTask(message);
                         break;
 
                     case "🖋️ Перевести":
-                        ITaskStart taskTranslate = new TaskTranslate(_bot, taskSessions);
+                        ITaskState taskTranslate = new TaskTranslate(_bot, taskSessions);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
-                        ITaskStart taskDeclination = new TaskDeclination(_bot, taskSessions);
+                        ITaskState taskDeclination = new TaskDeclination(_bot, taskSessions);
                         await taskDeclination.StartTask(message);
                         break;
 

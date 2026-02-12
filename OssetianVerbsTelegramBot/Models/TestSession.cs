@@ -14,10 +14,10 @@ namespace OssetianVerbsTelegramBot.Models
         public List<Verb> Verbs { get; private set; }
         public int CurrentIndex { get; set; } = 0;
         public int Score { get; set; } = 0;
-        public ITaskStart Task { get; set; }
+        public ITaskState Task { get; set; }
         public List<Sentence> Sentences { get; set; } = new List<Sentence>();
 
-        public TestSession(long userId, List<Verb> verbs = null, ITaskStart task = null)
+        public TestSession(long userId, List<Verb> verbs = null, ITaskState task = null)
         {
             UserId = userId;
             Verbs = verbs;
