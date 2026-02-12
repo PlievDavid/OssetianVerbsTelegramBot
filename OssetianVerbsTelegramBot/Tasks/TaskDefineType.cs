@@ -73,6 +73,7 @@ namespace OssetianVerbsTelegramBot.Tasks
                 else
                 {
                     await _bot.SendMessage(chatId, $"Тест завершён!\nРезультат: {session.Score}/10");
+                    await DbUser.FillStat(chatId.ToString());
                     _sessions.Remove(chatId);
                 }
             }
