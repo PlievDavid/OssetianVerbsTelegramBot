@@ -22,7 +22,7 @@ namespace OssetianVerbsTelegramBot
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
-        private long[] admins = { 946534275, 2033844706, 6242358847 };
+        private long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
 
         public BotHandler(string token)
         {

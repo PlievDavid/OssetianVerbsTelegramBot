@@ -2,6 +2,7 @@
 using OssetianVerbsTelegramBot.Tasks.Interface;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
@@ -35,6 +36,33 @@ namespace OssetianVerbsTelegramBot.Tasks
             await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_sessions[chatId].Score}/10");
             await DbUser.FillStat(chatId.ToString());
             _sessions.Remove(chatId);
+        }
+
+        protected virtual async Task UpdateOldMessage(CallbackQuery callback, bool isRight)
+        {
+            var msg = callback.Message;
+            if (msg == null) return;
+            var text = "";
+
+            if (msg?.ReplyMarkup is InlineKeyboardMarkup keyboard)
+            {
+                foreach (var row in keyboard.InlineKeyboard)
+                {
+                    foreach (var button in row)
+                        if (button.CallbackData == callback.Data)
+                        {
+                            text = button.Text;
+                            break;
+                        }
+                }
+            }
+            else return;
+            text += isRight ? "✅" : "❌";
+            var newKeyboard = new InlineKeyboardMarkup(new[]
+            {
+                InlineKeyboardButton.WithCallbackData(text, "oldButton")
+            });
+            await _bot.EditMessageReplyMarkup(msg.Chat.Id, msg.MessageId, newKeyboard);
         }
     }
 }

@@ -18,18 +18,10 @@ namespace OssetianVerbsTelegramBot.Tasks
         public override async Task SendNextQuestion(long chatId, TestSession session)
         {
             var verb = session.Verbs[session.CurrentIndex];
-
             var keyboard = new InlineKeyboardMarkup(new[]
             {
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "answer_1"),
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Тип 2 -тӕн (непереходный)", "answer_2")
-                }
-
+                new[] { InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "defineTypeAns:1") },
+                new[] { InlineKeyboardButton.WithCallbackData("Тип 2 -тӕн (непереходный)", "defineTypeAns:2") }
             });
             await _bot.SendMessage(
                 chatId,
@@ -41,65 +33,40 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
-            var callBackData = callbackQuery.Data;
-            if (callBackData.StartsWith("answer_"))
+            var callbackData = callbackQuery.Data;
+            if (!callbackData.StartsWith("defineTypeAns"))
+                return;
+
+            var chatId = callbackQuery.Message.Chat.Id;
+            int answer = int.Parse(callbackData.Split(':')[1]);
+            var session = _sessions[callbackQuery.Message.Chat.Id];
+            var verb = session.Verbs[session.CurrentIndex];
+
+            if (answer == verb.Type)
             {
-                var chatId = callbackQuery.Message.Chat.Id;
-                int answer = int.Parse(callbackQuery.Data.Split('_')[1]);
-                var session = _sessions[callbackQuery.Message.Chat.Id];
-                var verb = session.Verbs[session.CurrentIndex];
+                session.Score++;
+                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
 
-                if (answer == verb.Type)
-                {
-                    session.Score++;
-                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
+                await UpdateOldMessage(callbackQuery, true);
+                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
-                    await UpdateOldMessage(callbackQuery, true);
-                    await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+            }
+            else
+            {
+                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
+                await UpdateOldMessage(callbackQuery, false);
+                await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
+            }
 
-                }
-                else
-                {
-                    await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
-                    await UpdateOldMessage(callbackQuery, false);
-                    await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
-                }
+            session.CurrentIndex++;
+            if (session.CurrentIndex < session.Verbs.Count)
+                await SendNextQuestion(chatId, session);
 
-                session.CurrentIndex++;
-                if (session.CurrentIndex < session.Verbs.Count)
-                    await SendNextQuestion(chatId, session);
-
-                else
-                {
-                    await EndTask(chatId);
-                }
+            else
+            {
+                await EndTask(chatId);
             }
         }
 
-        private async Task UpdateOldMessage(CallbackQuery callback, bool isRight)
-        {
-            var msg = callback.Message;
-            if (msg == null) return;
-            var text = "";
-
-            if (msg?.ReplyMarkup is InlineKeyboardMarkup keyboard)
-            {
-                foreach (var row in keyboard.InlineKeyboard)
-                {
-                    foreach (var button in row)
-                    {
-                        if (button.CallbackData == callback.Data)
-                            text = button.Text;
-                    }
-                }
-            }
-            else return;
-            text += isRight ? "✅" : "❌";
-            var newKeyboard = new InlineKeyboardMarkup(new[]
-            {
-                InlineKeyboardButton.WithCallbackData(text, "oldButton")
-            });
-            await _bot.EditMessageReplyMarkup(msg.Chat.Id, msg.MessageId, newKeyboard);
-        }
     }
 }

@@ -26,8 +26,8 @@ namespace OssetianVerbsTelegramBot.Tasks
             int randomNum = Random.Shared.Next(1, 25) % 2;
             InlineKeyboardMarkup answers =
                 new InlineKeyboardMarkup(
-                    new InlineKeyboardButton(twoVerbs[randomNum].Trans, twoVerbs[randomNum].Trans), 
-                    new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, twoVerbs[1 - randomNum].Trans));
+                    new InlineKeyboardButton(twoVerbs[randomNum].Trans, "translateAns:"+twoVerbs[randomNum].Trans), 
+                    new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, "translateAns:"+twoVerbs[1 - randomNum].Trans));
 
 
             await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
@@ -35,24 +35,33 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         public  async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
+            var callbackData = callbackQuery.Data;
+            if (!callbackData.StartsWith("translateAns"))
+                return;
+
+            var answer = callbackData.Split(':')[1];
+
             var chatId = callbackQuery.Message.Chat.Id;
 
             var session = _sessions[chatId];
 
-            if (callbackQuery.Data == session.Verbs[session.CurrentIndex].Trans)
+            if (answer == session.Verbs[session.CurrentIndex].Trans)
             {
                 session.Score++;
                 await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, false);
+                await UpdateOldMessage(callbackQuery,true);
                 await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
             }
             else
             {
                 await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, true);
+                await UpdateOldMessage(callbackQuery, false);
                 await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndex].Trans);
             }
 
             session.CurrentIndex++;
             await SendNextQuestion(chatId, session);
         }
+        
     }
 }

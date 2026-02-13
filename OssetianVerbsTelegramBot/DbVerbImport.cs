@@ -36,16 +36,16 @@ namespace OssetianVerbsTelegramBot
             return ans;
         }
 
-
+        //Возвращает рандомные глаголы, часть которых будет из тех, в которых пользователь чаще ошибается
         public static async Task<List<Verb>> GetSmartRandomVerbs(string id, int count = 10)
         {
-
             var stat = await DbUser.GetUserStatById(id);
             var smartRandomVerbs = new HashSet<Verb>();
             var versbNeedToPractice = stat.Where(x => x.Percent <= 50).OrderBy(x => x.Percent);
             if (count >= AllVerbs.Count)
                 return AllVerbs;
 
+            //Сначала отбираем глаголы у которых низкий процент правильных ответов
             foreach (var verb in versbNeedToPractice)
             {
                 if (Random.Shared.Next(0, 2) > 0)
@@ -58,12 +58,13 @@ namespace OssetianVerbsTelegramBot
                 }
             }
 
-                while (count > 0)
-                {
-                    var verb = AllVerbs[Random.Shared.Next(0, AllVerbs.Count)];
-                    if (smartRandomVerbs.Add(verb))
-                        count--;
-                }
+            //Потом добираем оставшиеся глаголы
+            while (count > 0)
+            {
+                var verb = AllVerbs[Random.Shared.Next(0, AllVerbs.Count)];
+                if (smartRandomVerbs.Add(verb))
+                    count--;
+            }
 
             return smartRandomVerbs.ToList();
 
