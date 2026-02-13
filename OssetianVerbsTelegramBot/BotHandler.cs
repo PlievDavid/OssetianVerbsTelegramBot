@@ -22,7 +22,9 @@ namespace OssetianVerbsTelegramBot
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private Dictionary<long, int[]> helpMessages = new();
-        private long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
+            private HashSet<long> needFeedback = new();
+            private long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
+        private long[] moderators = { 946534275, 2033844706, 6242358847 };
 
         public BotHandler(string token)
         {
@@ -76,6 +78,8 @@ namespace OssetianVerbsTelegramBot
                     helpMessages.Remove(chatId);
                 }
 
+                
+
                 switch (message.Text)
                 {
                     case "/start":
@@ -112,9 +116,24 @@ namespace OssetianVerbsTelegramBot
                     case "⚙️ Статистика":
                         await SendStatistics(chatId);
                         break;
+
                     case "💡 Справка":
                         var messages = await SendHelp(chatId);
                         helpMessages[chatId] = messages;
+                        break;
+
+                    case "🆘 Обратная связь":
+                        var keyboard = new ReplyKeyboardMarkup(new KeyboardButton("🔙 Отмена"))
+                        {
+                            ResizeKeyboard = true
+                        };
+                        await _bot.SendMessage(chatId, "Если есть вопросы или заметили ошибки в работе бота, напишите сюда и ваше сообщение будет передано модераторам:", replyMarkup: keyboard);
+                        needFeedback.Add(chatId);
+                        break;
+
+                    case "🔙 Отмена":
+                        needFeedback.Remove(chatId);
+                        await SendMainMenu(chatId);
                         break;
 
                     case "🔙 В главное меню":
@@ -131,6 +150,22 @@ namespace OssetianVerbsTelegramBot
                         break;
 
                     default:
+
+                        if (needFeedback.Contains(chatId))
+                        {
+                            foreach (var moder in moderators)
+                            {
+                                await _bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
+                                    $"Отправитель: {chatId}  {message?.From?.Username??
+                                    message?.From?.FirstName??"тупорылый идиот который скрыл юзернейм"}🆘\n" + message.Text);
+                            }
+                            await _bot.SendMessage(chatId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
+
+                            needFeedback.Remove(chatId);
+                            await SendMainMenu(chatId);
+                            break;
+                        }
+
                         if (_chatSessions[chatId].IsGptMode)
                         {
                             Console.WriteLine("User(" + chatId + " - " + message.From.Username + "): " + message.Text);
@@ -251,6 +286,7 @@ namespace OssetianVerbsTelegramBot
             var keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
                 new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
+                new[] { new KeyboardButton("🆘 Обратная связь") },
             })
             {
                 ResizeKeyboard = true
@@ -260,6 +296,7 @@ namespace OssetianVerbsTelegramBot
                 keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
                 new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
+                new[] { new KeyboardButton("🆘 Обратная связь") },
                 new[] {new KeyboardButton("👨‍💻 Панель администратора")},
             })
                 {
