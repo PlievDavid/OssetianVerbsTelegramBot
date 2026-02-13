@@ -8,37 +8,37 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     public abstract class BaseTask : ITaskState
     {
-        protected readonly Dictionary<long, TestSession> _sessions;
+        protected private TestSession _session;
+        protected long chatId;
         protected readonly TelegramBotClient _bot;
 
-        protected BaseTask(TelegramBotClient bot, Dictionary<long, TestSession> sessions)
+        protected BaseTask(TelegramBotClient bot)
         {
-            _sessions = sessions;
             _bot = bot;
         }
 
         public async Task StartTask(Message message)
         {
-            var chatId = message.Chat.Id;
-            _sessions[chatId] = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), this);
+            chatId = message.Chat.Id;
+            _session = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), this);
+            BotHandler.AddNewTaskSession(chatId, _session);
 
-            var session = _sessions[chatId];
             await DbUser.StartStatUpdate(chatId.ToString());
-            await SendNextQuestion(chatId, session);
+            await SendNextQuestion();
         }
 
 
         //этот метод нужно обязательно реализовать в наследнике
-        public abstract Task SendNextQuestion(long chatId, TestSession session);
+        public abstract Task SendNextQuestion();
 
-        public virtual async Task EndTask(long chatId)
+        public virtual async Task EndTask()
         {
-            await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_sessions[chatId].Score}/10");
+            await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_session.Score}/{_session.CurrentIndex}");
             await DbUser.FillStat(chatId.ToString());
-            _sessions.Remove(chatId);
+            BotHandler.RemoveTaskSession(_session);
         }
 
-        protected virtual async Task UpdateOldMessage(CallbackQuery callback, bool isRight)
+        protected virtual async Task UpdateOldMessageCallback(CallbackQuery callback, bool isRight)
         {
             var msg = callback.Message;
             if (msg == null) return;
@@ -62,7 +62,21 @@ namespace OssetianVerbsTelegramBot.Tasks
             {
                 InlineKeyboardButton.WithCallbackData(text, "oldButton")
             });
-            await _bot.EditMessageReplyMarkup(msg.Chat.Id, msg.MessageId, newKeyboard);
+            await _bot.EditMessageReplyMarkup(chatId, msg.MessageId, newKeyboard);
+        }
+
+        protected virtual async Task HandleCorrectAnswer()
+        {
+            _session.Score++;
+            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
+            await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                
+        }
+        protected virtual async Task HandleIncorrectAnswer()
+        {
+            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
+            await _bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
+                
         }
     }
 }

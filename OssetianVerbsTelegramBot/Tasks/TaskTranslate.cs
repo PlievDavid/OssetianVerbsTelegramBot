@@ -9,17 +9,11 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskTranslate : BaseTask, ICallBackTask
     {
-        public TaskTranslate(TelegramBotClient bot, Dictionary<long, TestSession> sessions) : base(bot, sessions) { }
+        public TaskTranslate(TelegramBotClient bot) : base(bot) { }
 
-        public override async Task SendNextQuestion(long chatId, TestSession session)
+        public override async Task SendNextQuestion()
         {
-            
-            if (session.CurrentIndex > session.Verbs.Count-1)
-            {
-                await EndTask(chatId);
-            }
-
-            var verb = session.Verbs[session.CurrentIndex];
+            var verb = _session.Verbs[_session.CurrentIndex];
             var wrongVerb = DbVerbImport.GetRandomVerb();
 
             var twoVerbs = new List<Verb> { verb, wrongVerb };
@@ -30,7 +24,7 @@ namespace OssetianVerbsTelegramBot.Tasks
                     new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, "translateAns:"+twoVerbs[1 - randomNum].Trans));
 
 
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await _bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public  async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -41,26 +35,23 @@ namespace OssetianVerbsTelegramBot.Tasks
 
             var answer = callbackData.Split(':')[1];
 
-            var chatId = callbackQuery.Message.Chat.Id;
-
-            var session = _sessions[chatId];
-
-            if (answer == session.Verbs[session.CurrentIndex].Trans)
+            if (answer == _session.Verbs[_session.CurrentIndex].Trans)
             {
-                session.Score++;
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, false);
-                await UpdateOldMessage(callbackQuery,true);
-                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                await UpdateOldMessageCallback(callbackQuery, true);
+                await HandleCorrectAnswer();
             }
             else
             {
-                await DbUser.UpdateUserStat(chatId.ToString(), session.Verbs[session.CurrentIndex].Inf, true);
-                await UpdateOldMessage(callbackQuery, false);
-                await _bot.SendMessage(chatId, "Неверно! Правильно: " + session.Verbs[session.CurrentIndex].Trans);
+                await UpdateOldMessageCallback(callbackQuery, false);
+                await HandleIncorrectAnswer();
             }
 
-            session.CurrentIndex++;
-            await SendNextQuestion(chatId, session);
+            _session.CurrentIndex++;
+
+            if (_session.CurrentIndex < _session.Verbs.Count)
+                await SendNextQuestion();
+            else
+                await EndTask();
         }
         
     }

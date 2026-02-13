@@ -13,11 +13,11 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskDefineType : BaseTask, ICallBackTask
     {
-        public TaskDefineType(TelegramBotClient bot, Dictionary<long, TestSession> sessions) : base(bot, sessions) { }
+        public TaskDefineType(TelegramBotClient bot) : base(bot) { }
 
-        public override async Task SendNextQuestion(long chatId, TestSession session)
+        public override async Task SendNextQuestion()
         {
-            var verb = session.Verbs[session.CurrentIndex];
+            var verb = _session.Verbs[_session.CurrentIndex];
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[] { InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "defineTypeAns:1") },
@@ -25,7 +25,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             });
             await _bot.SendMessage(
                 chatId,
-                $"№{session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
+                $"№{_session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
                 replyMarkup: keyboard,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
             );
@@ -37,35 +37,26 @@ namespace OssetianVerbsTelegramBot.Tasks
             if (!callbackData.StartsWith("defineTypeAns"))
                 return;
 
-            var chatId = callbackQuery.Message.Chat.Id;
             int answer = int.Parse(callbackData.Split(':')[1]);
-            var session = _sessions[callbackQuery.Message.Chat.Id];
-            var verb = session.Verbs[session.CurrentIndex];
+            var verb = _session.Verbs[_session.CurrentIndex];
 
             if (answer == verb.Type)
             {
-                session.Score++;
-                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, false);
-
-                await UpdateOldMessage(callbackQuery, true);
-                await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
-
+                await UpdateOldMessageCallback(callbackQuery, true);
+                await HandleCorrectAnswer();
             }
             else
             {
-                await DbUser.UpdateUserStat(chatId.ToString(), verb.Inf, true);
-                await UpdateOldMessage(callbackQuery, false);
-                await _bot.SendMessage(chatId, $"Неправильный ответ!❌");
+               await UpdateOldMessageCallback(callbackQuery, false);
+               await HandleIncorrectAnswer();
             }
 
-            session.CurrentIndex++;
-            if (session.CurrentIndex < session.Verbs.Count)
-                await SendNextQuestion(chatId, session);
+            _session.CurrentIndex++;
 
+            if (_session.CurrentIndex < _session.Verbs.Count)
+                await SendNextQuestion();
             else
-            {
-                await EndTask(chatId);
-            }
+                await EndTask();
         }
 
     }

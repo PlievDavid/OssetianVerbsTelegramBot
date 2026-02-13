@@ -95,17 +95,17 @@ namespace OssetianVerbsTelegramBot
                         break;
 
                     case "📋 Тип глагола":
-                        ITaskState taskDefineType = new TaskDefineType(_bot, _taskSessions);
+                        ITaskState taskDefineType = new TaskDefineType(_bot);
                         await taskDefineType.StartTask(message);
                         break;
-
+                        
                     case "🖋️ Перевести":
-                        ITaskState taskTranslate = new TaskTranslate(_bot, _taskSessions);
+                        ITaskState taskTranslate = new TaskTranslate(_bot);
                         await taskTranslate.StartTask(message);
                         break;
 
                     case "🛠️ Спряжение":
-                        ITaskState taskDeclination = new TaskDeclination(_bot, _taskSessions);
+                        ITaskState taskDeclination = new TaskDeclination(_bot);
                         await taskDeclination.StartTask(message);
                         break;
 
@@ -120,7 +120,7 @@ namespace OssetianVerbsTelegramBot
                     case "🔙 В главное меню":
                         await SendMainMenu(chatId);
                         break;
-                    case "👑АДМИНКА👑":
+                    case "👨‍💻 Панель администратора":
                         await SendAdminMenu(chatId);
                         break;
 
@@ -260,7 +260,7 @@ namespace OssetianVerbsTelegramBot
                 keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
                 new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
-                new[] {new KeyboardButton("👑АДМИНКА👑")},
+                new[] {new KeyboardButton("👨‍💻 Панель администратора")},
             })
                 {
                     ResizeKeyboard = true
@@ -348,6 +348,15 @@ namespace OssetianVerbsTelegramBot
         {
             Console.WriteLine($"Ошибка: {exception.Message}");
             return Task.CompletedTask;
+        }
+
+        public static async  void AddNewTaskSession(long chatId, TestSession test)
+        {
+            _taskSessions[chatId] = test;
+        }
+        public static async  void RemoveTaskSession(TestSession test)
+        {
+            _taskSessions.Remove(test.UserId);
         }
     }
 

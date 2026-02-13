@@ -13,26 +13,17 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     internal class TaskDeclination: BaseTask, IMessageTask
     {
-        public TaskDeclination(TelegramBotClient bot, Dictionary<long, TestSession> sessions):base(bot, sessions) { }
-        public override async Task SendNextQuestion(long chatId, TestSession session)
+        public TaskDeclination(TelegramBotClient bot):base(bot) { }
+        public override async Task SendNextQuestion()
         {
-            if (session.CurrentIndex > session.Verbs.Count - 1)
-            {
-                await EndTask(chatId);
-                return;
-            }
-
-            var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(session.Verbs[session.CurrentIndex].Inf);
-            _sessions[chatId].Sentences.Add(sentence);
-            await _bot.SendMessage(chatId, $"№{session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(_session.Verbs[_session.CurrentIndex].Inf);
+            _session.Sentences.Add(sentence);
+            await _bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleMessageAnswer(Message message)
         {
-            var chatId = message.Chat.Id;
-
-            var session = _sessions[chatId];
-            var rightAns = session.Sentences[session.CurrentIndex].Ossetian.ToLower();
+            var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
 
             string msgText = message.Text.ToLower();
             if (rightAns.Contains(","))
@@ -42,14 +33,14 @@ namespace OssetianVerbsTelegramBot.Tasks
                 {
                     if (msgText == temp[i])
                     {
-                        session.Score++;
-                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
+                        _session.Score++;
+                        await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
                         await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                         break;
                     }
                     if (i==temp.Count()-1)
                     {
-                        await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, true);
+                        await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
                         await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
                     }
                 }
@@ -58,18 +49,19 @@ namespace OssetianVerbsTelegramBot.Tasks
             {
                 if (msgText == rightAns)
                 {
-                    session.Score++;
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, false);
-                    await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                    await HandleCorrectAnswer();
                 }
                 else
                 {
-                    await DbUser.UpdateUserStat(chatId.ToString(), session.Sentences[session.CurrentIndex].VerbInf, true);
-                    await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+                    await HandleIncorrectAnswer();
                 }
             }
-            session.CurrentIndex++;
-            await SendNextQuestion(chatId, session);
+            _session.CurrentIndex++;
+
+            if (_session.CurrentIndex < _session.Verbs.Count)
+                await SendNextQuestion();
+            else
+                await EndTask();
         }
     }
 }

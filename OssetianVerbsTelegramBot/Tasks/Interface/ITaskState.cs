@@ -11,6 +11,6 @@ namespace OssetianVerbsTelegramBot.Tasks.Interface
     public interface ITaskState
     {
         Task StartTask(Message message);
-        Task EndTask(long chatId);
+        Task EndTask();
     }
 }
