@@ -12,7 +12,7 @@ namespace OssetianVerbsTelegramBot
     {
 
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
-        public static List<Sentence> AllSentences { get; private set; }
+        public static List<Sentence> AllSentences { get; private set; } = [];
 
 
         public static async Task InitializeSentences() => AllSentences = await GetAllSentences();
@@ -62,7 +62,7 @@ namespace OssetianVerbsTelegramBot
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    ans.Add(new Sentence(reader[1].ToString(), reader[2].ToString(), reader[3].ToString()));
+                    ans.Add(new Sentence(reader[1].ToString()!, reader[2].ToString()!, reader[3].ToString()!));
                 }
                 conn.Close();
             }

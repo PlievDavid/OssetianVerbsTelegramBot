@@ -21,10 +21,6 @@ namespace OssetianVerbsTelegramBot
         private static Dictionary<long, ChatSession> _chatSessions = new();
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
-        private Dictionary<long, int[]> helpMessages = new();
-            private HashSet<long> needFeedback = new();
-            private long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
-        private long[] moderators = { 946534275, 2033844706, 6242358847 };
 
         public BotHandler(string token)
         {
@@ -36,11 +32,14 @@ namespace OssetianVerbsTelegramBot
             await DbVerbImport.InitializeVerbs();
             await DbSentencesImport.InitializeSentences();
             await DbUser.InitializeAllUsers();
+            MessageHelper.Initialize(_bot);
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 
+
             await Task.Delay(-1);
         }
+
 
         private async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken ct)
         {
@@ -71,25 +70,40 @@ namespace OssetianVerbsTelegramBot
                     _chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
                 }
 
-                if (helpMessages.ContainsKey(chatId))
+                if (MessageHelper.helpMessages.ContainsKey(chatId))
                 {
-                    var messages = helpMessages[chatId];
+                    var messages = MessageHelper.helpMessages[chatId];
                     await _bot.DeleteMessages(chatId, messages);
-                    helpMessages.Remove(chatId);
+                    MessageHelper.helpMessages.Remove(chatId);
                 }
 
-                
 
-                switch (message.Text)
+                var text = message.Text;
+
+                if (text.Contains("/sendto"))
+                {
+                    if (!MessageHelper.admins.Contains(chatId)) return;
+
+                    var parts = text.Split(':');
+                    if (parts.Length != 3) return;
+
+                    if (!Int64.TryParse(parts[1], out long id)) return;
+                    var msgToSend = parts[2];
+                    await _bot.SendMessage(id, $"Сообщение от модератора:\n{msgToSend}");
+                    await _bot.SendMessage(chatId, "Сообщение отправлено!");
+                    return;
+                }
+
+                switch (text)
                 {
                     case "/start":
                         await DbUser.InitialiseUser(message);
-                        await SendKeyboardLink(message);
-                        await SendMainMenu(chatId);
+                        await MessageHelper.SendKeyboardLink(message);
+                        await MessageHelper.SendMainMenu(chatId);
                         break;
 
                     case "📝 Глаголы":
-                        await SendVerbMenu(chatId);
+                        await MessageHelper.SendVerbMenu(chatId);
                         _chatSessions[chatId].IsGptMode = false;
                         break;
 
@@ -102,7 +116,7 @@ namespace OssetianVerbsTelegramBot
                         ITaskState taskDefineType = new TaskDefineType(_bot);
                         await taskDefineType.StartTask(message);
                         break;
-                        
+
                     case "🖋️ Перевести":
                         ITaskState taskTranslate = new TaskTranslate(_bot);
                         await taskTranslate.StartTask(message);
@@ -114,55 +128,44 @@ namespace OssetianVerbsTelegramBot
                         break;
 
                     case "⚙️ Статистика":
-                        await SendStatistics(chatId);
+                        await MessageHelper.SendStatistics(chatId);
                         break;
 
                     case "💡 Справка":
-                        var messages = await SendHelp(chatId);
-                        helpMessages[chatId] = messages;
+                        var messages = await MessageHelper.SendHelp(chatId);
+                        MessageHelper.helpMessages[chatId] = messages;
                         break;
 
                     case "🆘 Обратная связь":
-                        var keyboard = new ReplyKeyboardMarkup(new KeyboardButton("🔙 Отмена"))
-                        {
-                            ResizeKeyboard = true
-                        };
-                        await _bot.SendMessage(chatId, "Если есть вопросы или заметили ошибки в работе бота, напишите сюда и ваше сообщение будет передано модераторам:", replyMarkup: keyboard);
-                        needFeedback.Add(chatId);
-                        break;
+                        await MessageHelper.SendReportHelp(chatId);
+                        MessageHelper.needFeedback.Add(chatId);
+                        return;
 
                     case "🔙 Отмена":
-                        needFeedback.Remove(chatId);
-                        await SendMainMenu(chatId);
+                        MessageHelper.needFeedback.Remove(chatId);
+                        await MessageHelper.SendMainMenu(chatId);
                         break;
 
                     case "🔙 В главное меню":
-                        await SendMainMenu(chatId);
+                        await MessageHelper.SendMainMenu(chatId);
                         break;
                     case "👨‍💻 Панель администратора":
-                        await SendAdminMenu(chatId);
+                        await MessageHelper.SendAdminMenu(chatId);
                         break;
 
 
                     case "📝 Backup Базы данных":
-                        if(admins.Contains(chatId))
+                        if (MessageHelper.admins.Contains(chatId))
                             await DownloadSqliteDatabaseAsync(chatId);
                         break;
 
                     default:
 
-                        if (needFeedback.Contains(chatId))
+                        if (MessageHelper.needFeedback.Contains(chatId))
                         {
-                            foreach (var moder in moderators)
-                            {
-                                await _bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
-                                    $"Отправитель: {chatId}  {message?.From?.Username??
-                                    message?.From?.FirstName??"тупорылый идиот который скрыл юзернейм"}🆘\n" + message.Text);
-                            }
-                            await _bot.SendMessage(chatId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
+                            await MessageHelper.SendReportToAllModerators(chatId, message);
 
-                            needFeedback.Remove(chatId);
-                            await SendMainMenu(chatId);
+                            MessageHelper.needFeedback.Remove(chatId);
                             break;
                         }
 
@@ -197,67 +200,17 @@ namespace OssetianVerbsTelegramBot
                             }
                             else
                             {
-                                await SendMainMenu(chatId);
+                                await MessageHelper.SendMainMenu(chatId);
                             }
                         }
                         break;
                 }
+                MessageHelper.needFeedback.Remove(chatId);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
-        }
-
-        private async Task SendKeyboardLink(Message message)
-        {
-            string keyboardInformationString = """
-                Чтобы пользоваться всеми функциями бота, вам понадобится «Яндекс Клавиатура»
-                """;
-
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
-                new InlineKeyboardButton[] {
-                    new InlineKeyboardButton("Андроид", "https://play.google.com/store/apps/details?id=ru.yandex.androidkeyboard&hl=ru"),
-                    new InlineKeyboardButton("IOS", "https://apps.apple.com/ru/app/яндекс-клавиатура/id1053139327")
-                });
-
-            await _bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
-        }
-
-
-        private async Task SendStatistics(long id)
-        {
-            var list = await DbUser.GetUserStatById(id.ToString());
-            string textStatistics = "Статистика правильных ответов: \n";
-            foreach (var stat in list)
-            {
-                textStatistics += stat.ToString() + "\n";
-            }
-            await _bot.SendMessage(id, textStatistics);
-        }
-
-
-        private async Task<int[]> SendHelp(long id)
-        {
-            var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
-            var secondTypeVerbs = DbVerbImport.GetAllSecondTypeVerbs();
-            var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
-
-            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
-
-            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
-            foreach (var verb in firstTypeVerbs)
-                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
-
-            var firstTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
-
-            textVerbs = "<b>Непереходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
-            foreach (var verb in secondTypeVerbs)
-                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
-
-            var secondTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
-
-            return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
         }
 
 
@@ -269,7 +222,7 @@ namespace OssetianVerbsTelegramBot
 
             if (callBackData == null) return;
 
-            if (!_taskSessions.ContainsKey(chatId)) //чтобы при перезапуске бота старые кнопки не вызывали ошибку
+            if (!_taskSessions.ContainsKey(chatId))
                 return;
 
             if (callBackData.ToLower().Contains("oldbutton"))
@@ -280,75 +233,6 @@ namespace OssetianVerbsTelegramBot
                 await taskCallBack.HandleCallbackQuery(callbackQuery);
         }
 
-
-        private async Task SendMainMenu(long chatId)
-        {
-            var keyboard = new ReplyKeyboardMarkup(new[]{
-                new[] { new KeyboardButton("📝 Глаголы") },
-                new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
-                new[] { new KeyboardButton("🆘 Обратная связь") },
-            })
-            {
-                ResizeKeyboard = true
-            };
-            if (admins.Contains(chatId))
-            {
-                keyboard = new ReplyKeyboardMarkup(new[]{
-                new[] { new KeyboardButton("📝 Глаголы") },
-                new[] { new KeyboardButton("🤖 Чат-бот (Beta)") },
-                new[] { new KeyboardButton("🆘 Обратная связь") },
-                new[] {new KeyboardButton("👨‍💻 Панель администратора")},
-            })
-                {
-                    ResizeKeyboard = true
-                };
-            }
-
-
-            await _bot.SendMessage(chatId: chatId,
-                text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);
-        }
-
-        private async Task SendAdminMenu(long chatId)
-        {
-            var keyboard = new ReplyKeyboardMarkup(new[]{
-                new[] { new KeyboardButton("📝 Backup Базы данных") },
-                new[] { new KeyboardButton("🔙 В главное меню") }
-            })
-            {
-                ResizeKeyboard = true
-            };
-            await _bot.SendMessage(chatId: chatId,
-               text: "Добро пожаловать🛠️", replyMarkup: keyboard, parseMode: ParseMode.Html);
-        }
-
-        private async Task SendVerbMenu(long chatId)
-        {
-            var keyboard = new ReplyKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    new KeyboardButton("📋 Тип глагола"),
-                    new KeyboardButton("🖋️ Перевести"),
-                    new KeyboardButton("🛠️ Спряжение")
-                },
-                new[]
-                {
-                    new KeyboardButton("⚙️ Статистика"),
-                    new KeyboardButton("💡 Справка")
-                },
-                new[]
-                {
-                    new KeyboardButton("🔙 В главное меню")
-                }
-            })
-            {
-                ResizeKeyboard = true
-            };
-
-            await _bot.SendMessage(chatId: chatId,
-                text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
-        }
 
         public async Task DownloadSqliteDatabaseAsync(long adminChatId)
         {
@@ -387,11 +271,11 @@ namespace OssetianVerbsTelegramBot
             return Task.CompletedTask;
         }
 
-        public static async  void AddNewTaskSession(long chatId, TestSession test)
+        public static async void AddNewTaskSession(long chatId, TestSession test)
         {
             _taskSessions[chatId] = test;
         }
-        public static async  void RemoveTaskSession(TestSession test)
+        public static async void RemoveTaskSession(TestSession test)
         {
             _taskSessions.Remove(test.UserId);
         }

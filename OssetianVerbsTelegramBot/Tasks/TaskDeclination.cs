@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using static System.Collections.Specialized.BitVector32;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
@@ -62,6 +63,22 @@ namespace OssetianVerbsTelegramBot.Tasks
                 await SendNextQuestion();
             else
                 await EndTask();
+        }
+
+        protected override async Task HandleIncorrectAnswer()
+        {
+            var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
+            await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
+            await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+
+        }
+
+        protected override async Task HandleCorrectAnswer()
+        {
+            _session.Score++;
+            await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
+            await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+
         }
     }
 }

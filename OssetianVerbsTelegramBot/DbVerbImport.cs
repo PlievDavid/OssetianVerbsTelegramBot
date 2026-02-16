@@ -22,7 +22,7 @@ namespace OssetianVerbsTelegramBot
 
         static async Task<List<Verb>> GetAllVerbs()
         {
-            var ans = new List<Verb> { };
+            var ans = new List<Verb>{ };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
@@ -48,9 +48,9 @@ namespace OssetianVerbsTelegramBot
             //Сначала отбираем глаголы у которых низкий процент правильных ответов
             foreach (var verb in versbNeedToPractice)
             {
-                if (Random.Shared.Next(0, 2) > 0)
+                if (Random.Shared.Next(0, 3) == 0)
                 {
-                    smartRandomVerbs.Add(AllVerbs.FirstOrDefault(x => x.Inf == verb.Verb));
+                    smartRandomVerbs.Add(AllVerbs.First(x => x.Inf == verb.Verb));
                     count--;
 
                     if (count <= 0)
@@ -69,22 +69,6 @@ namespace OssetianVerbsTelegramBot
             return smartRandomVerbs.ToList();
 
         }
-
-        //public static List<Verb> GetRandomListVerb(int count = 10)
-        //{
-        //    var allCount = AllVerbs.Count();
-        //    var list = new List<Verb>();
-        //    for (int i = 0; i < count; i++)
-        //    {
-        //        var verb = AllVerbs[Random.Shared.Next(0, allCount)];
-        //        if (list.Any(x => x.Inf == verb.Inf))
-        //            if (count > allCount) return list;
-        //            else i--;
-        //        else
-        //            list.Add(verb);
-        //    }
-        //    return list;
-        //}
 
 
 

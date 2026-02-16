@@ -54,9 +54,9 @@ namespace OssetianVerbsTelegramBot
             }
             return ans;
         }
+
         public static async Task FillStat(string id)
         {
-
             var list = tempStat[id].OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
             tempStat.Remove(id);
             var ans = "";
@@ -109,7 +109,7 @@ namespace OssetianVerbsTelegramBot
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat]) VALUES('{msg.Chat.Id}','{msg.From.FirstName}', '')";
+                        string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName??"undefined"}', '')";
                         cmd.CommandText = strSql;
                         cmd.Connection = conn;
                         conn.Open();

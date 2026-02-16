@@ -17,7 +17,7 @@ namespace OssetianVerbsTelegramBot.Models
         public ITaskState Task { get; set; }
         public List<Sentence> Sentences { get; set; } = new List<Sentence>();
 
-        public TestSession(long userId, List<Verb> verbs = null, ITaskState task = null)
+        public TestSession(long userId, List<Verb> verbs, ITaskState task)
         {
             UserId = userId;
             Verbs = verbs;
