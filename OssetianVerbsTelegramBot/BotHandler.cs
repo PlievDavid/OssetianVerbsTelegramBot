@@ -73,9 +73,7 @@ namespace OssetianVerbsTelegramBot
 
                 if (MessageHelper.helpMessages.ContainsKey(chatId))
                 {
-                    var messages = MessageHelper.helpMessages[chatId];
-                    await _bot.DeleteMessages(chatId, messages);
-                    MessageHelper.helpMessages.Remove(chatId);
+                    await MessageHelper.SafeDeleteHelpMessages(chatId);
                 }
 
 
@@ -87,16 +85,16 @@ namespace OssetianVerbsTelegramBot
                     var text = message.Text;
                     switch (text)
                     {
-
                         case "📝 Глаголы":
                             await MessageHelper.SendVerbMenu(chatId);
                             _chatSessions[chatId].IsGptMode = false;
                             break;
-
                         case "🤖 Чат-бот (Beta)":
                             _chatSessions[chatId].IsGptMode = true;
                             await _bot.SendMessage(chatId, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                             break;
+
+
 
                         case "📋 Тип глагола":
                             ITaskState taskDefineType = new TaskDefineType(_bot);
@@ -118,8 +116,7 @@ namespace OssetianVerbsTelegramBot
                             break;
 
                         case "💡 Справка":
-                            var messages = await MessageHelper.SendHelp(chatId);
-                            MessageHelper.helpMessages[chatId] = messages;
+                            await MessageHelper.SendHelp(chatId,message.MessageId);
                             break;
 
                         case "🆘 Обратная связь":

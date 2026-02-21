@@ -16,11 +16,12 @@ namespace OssetianVerbsTelegramBot
         public static long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
         public static long[] moderators = { 946534275, 2033844706, 6242358847 };
         public static HashSet<long> needFeedback = new();
-        public static Dictionary<long, int[]> helpMessages = new();
+        public static Dictionary<long, List<int>> helpMessages = new();
         public static void Initialize(TelegramBotClient bot)
         {
             _bot = bot;
         }
+
         public static async Task SendAdminMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
@@ -116,27 +117,62 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
         }
 
-        public static async Task<int[]> SendHelp(long id)
+        public static async Task SendHelp(long id, int msgId)
         {
-            var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
-            var secondTypeVerbs = DbVerbImport.GetAllSecondTypeVerbs();
-            var imageFile = File.Open(Path.Combine("Images", "declinationRule.jpg"), FileMode.Open);
+            var messageIds = new List<int>{ msgId };
+            try
+            {
+                var imagePath = Path.Combine("Images", "declinationRule.jpg");
 
-            var photoMessage = await _bot.SendPhoto(id, imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
+                using (var imageFile = File.Open(imagePath, FileMode.Open, FileAccess.Read))
+                {
+                    var photoMessage = await _bot.SendPhoto( id,imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
+                    messageIds.Add(photoMessage.MessageId);
+                }
+                var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
+                var secondTypeVerbs = DbVerbImport.GetAllSecondTypeVerbs();
 
-            var textVerbs = "<b>Переходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
-            foreach (var verb in firstTypeVerbs)
-                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+                var firstTypeText = new StringBuilder();
+                firstTypeText.AppendLine("<b>Переходные глаголы:</b>");
+                firstTypeText.AppendLine("<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>");
+                foreach (var verb in firstTypeVerbs)
+                {
+                    firstTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
+                }
+                var firstTypeMessage = await _bot.SendMessage(id, firstTypeText.ToString(), parseMode: ParseMode.Html);
+                messageIds.Add(firstTypeMessage.MessageId);
 
-            var firstTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
+                var secondTypeText = new StringBuilder();
+                secondTypeText.AppendLine("<b>Непереходные глаголы:</b>");
+                secondTypeText.AppendLine("<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>");
+                foreach (var verb in secondTypeVerbs)
+                {
+                    secondTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
+                }
+                var secondTypeMessage = await _bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
+                messageIds.Add(secondTypeMessage.MessageId);
 
-            textVerbs = "<b>Непереходные глаголы:</b>\n<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>\n";
-            foreach (var verb in secondTypeVerbs)
-                textVerbs += $"{verb.Inf} - {verb.Past} - {verb.Trans}\n";
+                helpMessages[id] = messageIds;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending help to user {id}: {ex.Message}");
+            }
 
-            var secondTypeMessage = await _bot.SendMessage(id, textVerbs, parseMode: ParseMode.Html);
+            
 
-            return new[] { photoMessage.MessageId, firstTypeMessage.MessageId, secondTypeMessage.MessageId, photoMessage.MessageId - 1 };
+        }
+        public static async Task SafeDeleteHelpMessages(long userId)
+        {
+            try
+            {
+                await _bot.DeleteMessages(userId,helpMessages[userId]);
+                helpMessages.Remove(userId);
+            }
+            catch
+            {
+                Console.WriteLine("Ошибка удаления справки");
+            }
         }
 
         public static async Task SendReportToAllModerators(long reporterId,Message message)
