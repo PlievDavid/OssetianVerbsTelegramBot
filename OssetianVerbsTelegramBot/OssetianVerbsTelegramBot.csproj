@@ -6,9 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-		<DefineConstants>WINDOWS</DefineConstants>
-	</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />

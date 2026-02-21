@@ -12,13 +12,14 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-#if WINDOWS
+#if DEBUG
         var botHandler = new BotHandler(EnvironmentManager.GetTestBotToken());
-        await botHandler.Start();
+
 #else
-        var botHandler = new BotHandler(EnvironmentManager.GetBotTokenhh());
-        await botHandler.Start();
+        var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
+        
 #endif
+        await botHandler.Start();
     }
 
 
