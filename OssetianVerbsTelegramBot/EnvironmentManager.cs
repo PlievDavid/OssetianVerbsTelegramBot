@@ -23,6 +23,20 @@ namespace OssetianVerbsTelegramBot
             }
             throw new Exception("Токен бота не найден!");
         }
+        public static string GetTestBotToken()
+        {
+            string token = "";
+            if (File.Exists(".env"))
+            {
+                Env.Load();
+                token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN_TEST");
+                if (token != null)
+                {
+                    return token;
+                }
+            }
+            throw new Exception("Токен бота не найден!");
+        }
 
         public static string GetYandexGptKey()
         {

@@ -12,12 +12,17 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
+#if WINDOWS
+        var botHandler = new BotHandler(EnvironmentManager.GetTestBotToken());
         await botHandler.Start();
+#else
+        var botHandler = new BotHandler(EnvironmentManager.GetBotTokenhh());
+        await botHandler.Start();
+#endif
     }
 
 
-   
+
     static public void FillVerbsDb(string path)
     {
         var sr = new StreamReader(path);
