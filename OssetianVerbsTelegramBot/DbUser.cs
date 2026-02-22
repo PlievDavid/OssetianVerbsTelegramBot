@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using OssetianVerbsTelegramBot.Models;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace OssetianVerbsTelegramBot
     {
         private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         private static Dictionary<string,List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
+        private static Dictionary<string, int> tempScore = new Dictionary<string, int>();
+        private static Dictionary<string, int> tempStreak = new Dictionary<string, int>();
         public static readonly HashSet<long> allUsersId = new HashSet<long>();
         public static bool IsExistUser(long id) => allUsersId.Contains(id);
 
@@ -37,12 +40,13 @@ namespace OssetianVerbsTelegramBot
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 conn.Open();
-                string sql = $"SELECT * FROM Users WHERE Id = '{id}'";
+                string sql = $"SELECT Stat, Streak FROM Users WHERE Id = '{id}'";
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    var temp = reader[2].ToString().Split("&");
+                    tempStreak[id] = Convert.ToInt32(reader[reader.FieldCount - 1]);
+                    var temp = reader[0].ToString().Split("&");
                     foreach (var item in temp)
                     {
                         if (string.IsNullOrEmpty(item))
@@ -69,7 +73,7 @@ namespace OssetianVerbsTelegramBot
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
                     conn.Open();
-                    string sql = $"Update Users Set Stat = '{ans}' WHERE Id = '{id}'";
+                    string sql = $"Update Users Set Stat = '{ans}', DailyScore = DailyScore + {tempScore[id]}, WeeklyScore = WeeklyScore + {tempScore[id]}, MonthlyScore = MonthlyScore + {tempScore[id]} WHERE Id = '{id}'";
                     cmd.CommandText = sql;
                     cmd.Connection = conn;
                     conn.Open();
@@ -81,6 +85,7 @@ namespace OssetianVerbsTelegramBot
         public static async Task StartStatUpdate(string id)
         {
             tempStat[id] = await GetUserStatById(id);
+            tempScore[id] = 0;
         }
         public static async Task UpdateUserStat(string id, string verb, bool IsError)
         {
@@ -89,17 +94,26 @@ namespace OssetianVerbsTelegramBot
                 if (IsError)
                     tempStat[id].Add(new StatItem(verb, "0", "1"));
                 else
+                {
                     tempStat[id].Add(new StatItem(verb, "1", "1"));
+                    tempScore[id] += 10 + StreakMultiplier(id);
+                }
             }
             else
             {
                 if (IsError)
                     tempStat[id].First(item => item.Verb == verb).IncrementCount();
                 else
+                { 
                     tempStat[id].First(item => item.Verb == verb).IncrementRightCount();
+                    tempScore[id] += 10 + StreakMultiplier(id);
+                }
             }
         }
-
+        static private int StreakMultiplier(string id)
+        {
+            return tempStreak[id] >= 50 ? 100 : tempStreak[id] * 2;
+        }
         static public async Task InitialiseUser(Message msg)
         {
             if (! IsExistUser(msg.Chat.Id))
