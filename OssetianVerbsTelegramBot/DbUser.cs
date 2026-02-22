@@ -105,11 +105,12 @@ namespace OssetianVerbsTelegramBot
             if (! IsExistUser(msg.Chat.Id))
             {
                 allUsersId.Add(msg.Chat.Id);
+                var date = DateTime.Now.ToShortDateString();
                 using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName??"undefined"}', '')";
+                        string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName??"undefined"}', '', '{date}')";
                         cmd.CommandText = strSql;
                         cmd.Connection = conn;
                         conn.Open();
