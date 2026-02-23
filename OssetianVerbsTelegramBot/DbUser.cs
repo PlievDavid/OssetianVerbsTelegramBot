@@ -30,7 +30,6 @@ namespace OssetianVerbsTelegramBot
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                     allUsersId.Add(reader.GetInt64(0));
-                conn.Close();
             }
         }
 
@@ -54,7 +53,6 @@ namespace OssetianVerbsTelegramBot
                         ans.Add(new StatItem(item));
                     }
                 }
-                conn.Close();
             }
             return ans;
         }
@@ -72,13 +70,11 @@ namespace OssetianVerbsTelegramBot
             {
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
-                    conn.Open();
                     string sql = $"Update Users Set Stat = '{ans}', DailyScore = DailyScore + {tempScore[id]}, WeeklyScore = WeeklyScore + {tempScore[id]}, MonthlyScore = MonthlyScore + {tempScore[id]} WHERE Id = '{id}'";
                     cmd.CommandText = sql;
                     cmd.Connection = conn;
                     conn.Open();
                     cmd.ExecuteNonQuery();
-                    conn.Close();
                 }
             }
         }
@@ -129,7 +125,6 @@ namespace OssetianVerbsTelegramBot
                         cmd.Connection = conn;
                         conn.Open();
                         cmd.ExecuteNonQuery();
-                        conn.Close();
                     }
                 }
             }
@@ -143,13 +138,11 @@ namespace OssetianVerbsTelegramBot
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        conn.Open();
                         string sql = $"Update Users Set DailyScore = 0";
                         cmd.CommandText = sql;
                         cmd.Connection = conn;
                         conn.Open();
                         cmd.ExecuteNonQuery();
-                        conn.Close();
                     }
                 }
             }
@@ -163,13 +156,11 @@ namespace OssetianVerbsTelegramBot
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        conn.Open();
                         string sql = $"Update Users Set WeeklyScore = 0";
                         cmd.CommandText = sql;
                         cmd.Connection = conn;
                         conn.Open();
                         cmd.ExecuteNonQuery();
-                        conn.Close();
                     }
                 }
             }
@@ -184,13 +175,11 @@ namespace OssetianVerbsTelegramBot
                 {
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        conn.Open();
                         string sql = $"Update Users Set MonthlyScore = 0";
                         cmd.CommandText = sql;
                         cmd.Connection = conn;
                         conn.Open();
                         cmd.ExecuteNonQuery();
-                        conn.Close();
                     }
                 }
             }
