@@ -57,7 +57,6 @@ namespace OssetianVerbsTelegramBot.Tasks
                 }
             }
             else return;
-            text += isRight ? " ✅" : " ❌";
             var newKeyboard = new InlineKeyboardMarkup(new[]
             {
                 new InlineKeyboardButton(text, "oldButton"){Style = isRight ? KeyboardButtonStyle.Success : KeyboardButtonStyle.Danger},

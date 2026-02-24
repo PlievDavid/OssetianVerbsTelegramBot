@@ -237,7 +237,7 @@ namespace OssetianVerbsTelegramBot
                 await using var stream = File.OpenRead(tempDbPath);
                 await _bot.SendDocument(
                     adminChatId,
-                    new InputFileStream(stream, $"database_{DateTime.Now:yyyy-MM-dd}.db"),
+                    new InputFileStream(stream, $"VerbsDb_{DateTime.Now:yyyy-MM-dd}.db"),
                     caption: $"🗄 <b>SQLite Database</b>\n📊 Размер: {new FileInfo(dbPath).Length / 1024:N0} KB",
                     parseMode: ParseMode.Html
                 );
