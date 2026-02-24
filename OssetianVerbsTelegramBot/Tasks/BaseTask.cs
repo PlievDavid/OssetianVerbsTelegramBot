@@ -60,7 +60,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             text += isRight ? " ✅" : " ❌";
             var newKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData(text, "oldButton")
+                new InlineKeyboardButton(text, "oldButton"){Style = isRight ? KeyboardButtonStyle.Success : KeyboardButtonStyle.Danger},
             });
             await _bot.EditMessageReplyMarkup(chatId, msg.MessageId, newKeyboard);
         }

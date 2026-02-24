@@ -14,7 +14,8 @@ namespace OssetianVerbsTelegramBot
     {
         static TelegramBotClient _bot;
         public static long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
-        public static long[] moderators = { 946534275, 2033844706, 6242358847 };
+                                          //Геор        Давид       Алан     МД
+        public static long[] moderators = { 946534275 , 2033844706, 6242358847 };
         public static HashSet<long> needFeedback = new();
         public static Dictionary<long, List<int>> helpMessages = new();
         public static void Initialize(TelegramBotClient bot)
