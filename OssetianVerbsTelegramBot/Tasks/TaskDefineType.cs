@@ -59,5 +59,11 @@ namespace OssetianVerbsTelegramBot.Tasks
                 await EndTask();
         }
 
+        protected override async Task HandleIncorrectAnswer()
+        {
+            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
+            var type = _session.Verbs[_session.CurrentIndex].Type == 1 ? "тип 1 (переходный)" : "тип 2 (непереходный)";
+            await _bot.SendMessage(chatId, "Неверно! Это " + type);
+        }
     }
 }

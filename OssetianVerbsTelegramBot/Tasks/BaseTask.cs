@@ -71,11 +71,6 @@ namespace OssetianVerbsTelegramBot.Tasks
             await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 
         }
-        protected virtual async Task HandleIncorrectAnswer()
-        {
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
-            await _bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
-                
-        }
+        protected abstract  Task HandleIncorrectAnswer();
     }
 }
