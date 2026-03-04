@@ -22,6 +22,7 @@ namespace OssetianVerbsTelegramBot
         YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
 
+        
         public BotHandler(string token)
         {
             _bot = new TelegramBotClient(token);
@@ -34,6 +35,8 @@ namespace OssetianVerbsTelegramBot
             await DbUser.InitializeAllUsers();
             MessageHelper.Initialize(_bot);
             CommandHandler.Initialize(_bot);
+            await ScoreResetService.StartReset();
+
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 

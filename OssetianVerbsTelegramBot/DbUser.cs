@@ -13,7 +13,7 @@ namespace OssetianVerbsTelegramBot
 {
     public static class DbUser
     {
-        private static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
+        public static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
         private static Dictionary<string, List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
         private static Dictionary<string, int> tempScore = new Dictionary<string, int>();
         private static Dictionary<string, int> tempStreak = new Dictionary<string, int>();
@@ -129,80 +129,6 @@ namespace OssetianVerbsTelegramBot
                 }
             }
         }
-        public static async Task StartDailyScoreReset()
-        {
-            while(true)
-            {
-                await Task.Delay(new TimeSpan(1, 0, 0, 0));
-                using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
-                {
-                    using (SqliteCommand cmd = new SqliteCommand())
-                    {
-                        string sql = $"Update Users Set DailyScore = 0";
-                        cmd.CommandText = sql;
-                        cmd.Connection = conn;
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-        }
-        public static async Task StartWeeklyScoreReset()
-        {
-            while (true)
-            {
-                await Task.Delay(new TimeSpan(7, 0, 0, 0));
-                using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
-                {
-                    using (SqliteCommand cmd = new SqliteCommand())
-                    {
-                        string sql = $"Update Users Set WeeklyScore = 0";
-                        cmd.CommandText = sql;
-                        cmd.Connection = conn;
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-        }
-        public static async Task StartMonthlyScoreReset()
-        {
-            while (true)
-            {
-                int dayCount = GetDayCount();
-                await Task.Delay(new TimeSpan(dayCount, 0, 0, 0));
-                using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
-                {
-                    using (SqliteCommand cmd = new SqliteCommand())
-                    {
-                        string sql = $"Update Users Set MonthlyScore = 0";
-                        cmd.CommandText = sql;
-                        cmd.Connection = conn;
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-        }
-        static private int GetDayCount()
-        {
-            int curMonth = DateTime.Now.Month;
-            if (curMonth <= 7)
-            {
-                if (curMonth == 2)
-                {
-                    return 28;
-                }
-                if (curMonth % 2 == 0)
-                    return 30;
-                return 31;
-                
-            }
-            if (curMonth%2 == 0)
-            {
-                return 31;
-            }
-            return 30;
-        }
+        
     }
 }
