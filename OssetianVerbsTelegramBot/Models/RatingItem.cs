@@ -10,10 +10,10 @@ namespace OssetianVerbsTelegramBot.Models
     {
         public long UserId { get; private set; }
         public string Name { get; private set; }
-        public long DailyScore { get; private set; }
-        public long WeeklyScore { get; private set; }
-        public long MonthlyScore { get; private set; }
-        public RatingItem(long userId, string name, long dailyScore, long weeklyScore, long monthlyScore)
+        public int DailyScore { get; private set; }
+        public int WeeklyScore { get; private set; }
+        public int MonthlyScore { get; private set; }
+        public RatingItem(long userId, string name, int dailyScore, int weeklyScore, int monthlyScore)
         {
             UserId = userId;
             Name = name;

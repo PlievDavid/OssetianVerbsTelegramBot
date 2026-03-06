@@ -106,9 +106,9 @@ namespace OssetianVerbsTelegramBot
         public static async Task SendRating(long id, int msgId)
         {
             await DbUser.UpdateUserRating();
-            var msg = await _bot.SendMessage(id, "Загрузка...");
-            await SendDailyRating(id, msg);
-            messagesToDelete[id] = new List<int> { msg.Id, msgId };
+            var ratingMsg = await _bot.SendMessage(id, "Загрузка...");
+            await SendDailyRating(id, ratingMsg);
+            messagesToDelete[id] = new List<int> { ratingMsg.Id, msgId };
         }
 
         private static async Task SendDailyRating(long id, Message msg)

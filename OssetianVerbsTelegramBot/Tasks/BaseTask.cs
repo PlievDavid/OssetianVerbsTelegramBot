@@ -21,7 +21,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             chatId = message.Chat.Id;
             _session = new TestSession(chatId, await DbVerbImport.GetSmartRandomVerbs(chatId.ToString()), this);
-            BotHandler.AddNewTaskSession(chatId, _session);
+            BotHandler.SetNewTaskSession(chatId, _session);
 
             await DbUser.StartStatUpdate(chatId.ToString());
             await SendNextQuestion();

@@ -25,7 +25,7 @@ namespace OssetianVerbsTelegramBot
         {
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
                 string sql = "SELECT Id FROM Users";
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = command.ExecuteReader();
@@ -66,9 +66,10 @@ namespace OssetianVerbsTelegramBot
                 string sql = $"SELECT Id, Name, DailyScore, WeeklyScore, MonthlyScore FROM Users";
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = await command.ExecuteReaderAsync();
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
-                    tempRating.Add(new RatingItem(Convert.ToInt64(reader[0]), reader[1].ToString(), (long)reader[2], (long)reader[3], (long)reader[4]));
+                    var id = Convert.ToInt64(reader.GetString(0));
+                    tempRating.Add(new RatingItem(id , reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetInt32(4)));
                 }
             }
         }

@@ -35,7 +35,7 @@ namespace OssetianVerbsTelegramBot
             await DbUser.InitializeAllUsers();
             MessageHelper.Initialize(_bot);
             CommandHandler.Initialize(_bot);
-            await ScoreResetService.StartReset();
+            ScoreResetService.Start();
 
             _bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
@@ -206,20 +206,20 @@ namespace OssetianVerbsTelegramBot
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             await _bot.AnswerCallbackQuery(callbackQuery.Id);
-            var chatId = callbackQuery.Message.Chat.Id;
-            var callBackData = callbackQuery.Data;
-
+            var callBackData = callbackQuery?.Data?.ToLower();
             if (callBackData == null) return;
-            if (callBackData.ToLower().Contains("ratingid"))
+
+            var chatId = callbackQuery.Message.Chat.Id;
+            if (callBackData.Contains("ratingid"))
             {
                 await MessageHelper.HandleCallbackQuery(callbackQuery);
                 return;
             }
 
-            if (!_taskSessions.ContainsKey(chatId))
+            if (callBackData.Contains("oldbutton"))
                 return;
 
-            if (callBackData.ToLower().Contains("oldbutton"))
+            if (!_taskSessions.ContainsKey(chatId))
                 return;
             var task = _taskSessions[chatId].Task;
             if (task is ICallBackTask taskCallBack)
@@ -264,7 +264,7 @@ namespace OssetianVerbsTelegramBot
             return Task.CompletedTask;
         }
 
-        public static async void AddNewTaskSession(long chatId, TestSession test)
+        public static async void SetNewTaskSession(long chatId, TestSession test)
         {
             _taskSessions[chatId] = test;
         }

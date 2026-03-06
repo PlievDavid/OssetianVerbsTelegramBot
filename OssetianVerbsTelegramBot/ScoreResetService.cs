@@ -9,7 +9,12 @@ namespace OssetianVerbsTelegramBot
 {
     public static class ScoreResetService
     {
-        public static async Task StartReset()
+        public static void Start()
+        {
+            _ = Task.Run(RunAsync);
+        }
+
+        private static async Task RunAsync()
         {
             while (true)
             {
