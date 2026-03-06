@@ -39,37 +39,41 @@ namespace OssetianVerbsTelegramBot
             var ans = new List<StatItem> { };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
-                conn.Open();
-                string sql = $"SELECT Stat, Streak FROM Users WHERE Id = '{id}'";
-                SqliteCommand command = new SqliteCommand(sql, conn);
-                SqliteDataReader reader = command.ExecuteReader();
-                if (reader.Read())
+                await conn.OpenAsync();
+                using (SqliteCommand cmd = new SqliteCommand($"SELECT Stat, Streak FROM Users WHERE Id = '{id}'", conn))
                 {
-                    tempStreak[id] = Convert.ToInt32(reader[reader.FieldCount - 1]);
-                    var temp = reader[0].ToString().Split("&");
-                    foreach (var item in temp)
+                    SqliteDataReader reader = await cmd.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
                     {
-                        if (string.IsNullOrEmpty(item))
-                            return ans;
-                        ans.Add(new StatItem(item));
+                        tempStreak[id] = reader.GetInt32(reader.FieldCount - 1); //Convert.ToInt32(reader[reader.FieldCount - 1]);
+                        var temp = reader.GetString(0).Split("&");
+                        foreach (var item in temp)
+                        {
+                            if (string.IsNullOrEmpty(item))
+                                return ans;
+                            ans.Add(new StatItem(item));
+                        }
                     }
                 }
             }
             return ans;
         }
+
         public static async Task UpdateUserRating()
         {
             tempRating.Clear();
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 await conn.OpenAsync();
-                string sql = $"SELECT Id, Name, DailyScore, WeeklyScore, MonthlyScore FROM Users";
-                SqliteCommand command = new SqliteCommand(sql, conn);
-                SqliteDataReader reader = await command.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+
+                using (SqliteCommand cmd = new SqliteCommand($"SELECT Id, Name, DailyScore, WeeklyScore, MonthlyScore FROM Users", conn))
                 {
-                    var id = Convert.ToInt64(reader.GetString(0));
-                    tempRating.Add(new RatingItem(id , reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetInt32(4)));
+                    SqliteDataReader reader = await cmd.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        var id = Convert.ToInt64(reader.GetString(0));
+                        tempRating.Add(new RatingItem(id, reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetInt32(4)));
+                    }
                 }
             }
         }
@@ -80,18 +84,16 @@ namespace OssetianVerbsTelegramBot
             tempStat.Remove(id);
             var ans = "";
             foreach (var item in list)
-            {
                 ans += item.ToString() + "&";
-            }
+
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
+                await conn.OpenAsync();
                 using (SqliteCommand cmd = new SqliteCommand())
                 {
-                    string sql = $"Update Users Set Stat = '{ans}', DailyScore = DailyScore + {tempScore[id]}, WeeklyScore = WeeklyScore + {tempScore[id]}, MonthlyScore = MonthlyScore + {tempScore[id]} WHERE Id = '{id}'";
-                    cmd.CommandText = sql;
+                    cmd.CommandText = $"Update Users Set Stat = '{ans}', DailyScore = DailyScore + {tempScore[id]}, WeeklyScore = WeeklyScore + {tempScore[id]}, MonthlyScore = MonthlyScore + {tempScore[id]} WHERE Id = '{id}'";
                     cmd.Connection = conn;
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }
@@ -135,17 +137,16 @@ namespace OssetianVerbsTelegramBot
                 var date = DateTime.Now.ToShortDateString();
                 using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
+                    await conn.OpenAsync();
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        string strSql = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}', '', '{date}')";
-                        cmd.CommandText = strSql;
+                        cmd.CommandText = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}', '', '{date}')";
                         cmd.Connection = conn;
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
         }
-        
+
     }
 }
