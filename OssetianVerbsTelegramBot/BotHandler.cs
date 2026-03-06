@@ -57,7 +57,7 @@ namespace OssetianVerbsTelegramBot
             }
             else if (update.Type == UpdateType.CallbackQuery)
             {
-                await HandleCallbackQuery(update.CallbackQuery);
+                await HandleCallbackQuery(update.CallbackQuery!);
             }
         }
 
@@ -163,7 +163,7 @@ namespace OssetianVerbsTelegramBot
 
                                 var loadSmile = await _bot.SendSticker(chatId, sticker: "CAACAgUAAxkBAAEVynlphwOBCtgySn0lY4gZRq60cHjnFgACFwsAAnpH2FSrntiSYBUw7ToE");
 
-                                var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
+                                var ruMessage = await yandexTranslateClient.TranslateTextAsync(message?.Text??"", "os", "ru");
 
                                 _chatSessions[chatId].AddHistory($"User: {ruMessage}");
 
@@ -209,7 +209,7 @@ namespace OssetianVerbsTelegramBot
             var callBackData = callbackQuery?.Data?.ToLower();
             if (callBackData == null) return;
 
-            var chatId = callbackQuery.Message.Chat.Id;
+            var chatId = callbackQuery!.Message!.Chat.Id;
             if (callBackData.Contains("ratingid"))
             {
                 await MessageHelper.HandleCallbackQuery(callbackQuery);

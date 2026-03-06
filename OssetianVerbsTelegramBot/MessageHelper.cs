@@ -227,11 +227,11 @@ namespace OssetianVerbsTelegramBot
         }
         public static async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
-            switch (callbackQuery.Data.Split(":")[1])
+            switch (callbackQuery.Data?.Split(":")[1])
             {
-                case "1":await SendDailyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message);break;
-                case "2": await SendWeeklyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message); break;
-                case "3": await SendMonthlyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message); break;
+                case "1":await SendDailyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message);break;
+                case "2": await SendWeeklyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message); break;
+                case "3": await SendMonthlyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message); break;
             }
         }
         public static async Task SendKeyboardLink(Message message)
@@ -313,7 +313,7 @@ namespace OssetianVerbsTelegramBot
             {
                 await _bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
                     $"Отправитель: {reporterId}  @{message?.From?.Username ??
-                    message?.From?.FirstName ?? "скрыл юзернейм"} :\n" + message.Text);
+                    message?.From?.FirstName ?? "скрыл юзернейм"} :\n" + message?.Text);
             }
             await _bot.SendMessage(reporterId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
 
