@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OssetianVerbsTelegramBot.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace OssetianVerbsTelegramBot
         public static long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
         public static long[] moderators = { 946534275, 2033844706, 6242358847 };
         public static HashSet<long> needFeedback = new();
-        public static Dictionary<long, List<int>> helpMessages = new();
+        public static Dictionary<long, List<int>> messagesToDelete = new();
         public static void Initialize(TelegramBotClient bot)
         {
             _bot = bot;
@@ -47,6 +48,7 @@ namespace OssetianVerbsTelegramBot
                 },
                 new[]
                 {
+                    new KeyboardButton("🏆 Рейтинг"),
                     new KeyboardButton("⚙️ Статистика"),
                     new KeyboardButton("💡 Справка")
                 },
@@ -101,7 +103,137 @@ namespace OssetianVerbsTelegramBot
             }
             await _bot.SendMessage(id, textStatistics);
         }
+        public static async Task SendRating(long id, int msgId)
+        {
+            await DbUser.UpdateUserRating();
+            var msg = await _bot.SendMessage(id, "Загрузка...");
+            await SendDailyRating(id, msg);
+            messagesToDelete[id] = new List<int> { msg.Id, msgId };
+        }
 
+        private static async Task SendDailyRating(long id, Message msg)
+        {
+            var textRating = "Ежедневный рейтинг:\n";
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[] { InlineKeyboardButton.WithCallbackData("Еженедельный", "ratingId:2") },
+                new[] { InlineKeyboardButton.WithCallbackData("Ежемесячный", "ratingId:3") },
+            });
+            var rating = DbUser.tempRating.OrderByDescending(item => item.DailyScore).ThenBy(item => item.Name);
+            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
+            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).DailyScore} очков\n" +
+                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).DailyScore} очков\n" +
+                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).DailyScore} очков\n";
+            if (pos == 1 || pos== 2)
+            {
+                await _bot.EditMessageText(id, msg.Id, textRating);
+                await _bot.EditMessageReplyMarkup(
+                    id,
+                    msg.Id,
+                    replyMarkup: keyboard
+                );
+                return;
+            }
+            textRating += ".\n.\n";
+            if (pos !=3 && pos!=4)
+            {
+                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).DailyScore} очков\n";
+            }
+            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).DailyScore} очков\n";
+            if (pos!=rating.Count())
+                textRating += $"{pos+1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).DailyScore} очков\n";
+            await _bot.EditMessageText(id, msg.Id, textRating);
+            await _bot.EditMessageReplyMarkup(
+                id,
+                msg.Id,
+                replyMarkup: keyboard
+            );
+        }
+        private static async Task SendWeeklyRating(long id, Message msg)
+        {
+            var textRating = "Еженедельный рейтинг:\n";
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[] { InlineKeyboardButton.WithCallbackData("Ежедневный", "ratingId:1") },
+                new[] { InlineKeyboardButton.WithCallbackData("Ежемесячный", "ratingId:3") },
+            });
+            var rating = DbUser.tempRating.OrderByDescending(item => item.WeeklyScore).ThenBy(item => item.Name);
+            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
+            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).WeeklyScore} очков\n" +
+                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).WeeklyScore} очков\n" +
+                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).WeeklyScore} очков\n";
+            if (pos == 1 || pos == 2)
+            {
+                await _bot.EditMessageText(id, msg.Id, textRating);
+                await _bot.EditMessageReplyMarkup(
+                    id,
+                    msg.Id,
+                    replyMarkup: keyboard
+                );
+                return;
+            }
+            textRating += ".\n.\n";
+            if (pos != 3 && pos != 4)
+            {
+                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).WeeklyScore} очков\n";
+            }
+            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).WeeklyScore} очков\n";
+            if (pos != rating.Count())
+                textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).WeeklyScore} очков\n";
+            await _bot.EditMessageText(id, msg.Id, textRating);
+            await _bot.EditMessageReplyMarkup(
+                id,
+                msg.Id,
+                replyMarkup: keyboard
+            );
+        }
+        private static async Task SendMonthlyRating(long id, Message msg)
+        {
+            var textRating = "Ежемесячный рейтинг:\n";
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[] { InlineKeyboardButton.WithCallbackData("Ежедневный", "ratingId:1") },
+                new[] { InlineKeyboardButton.WithCallbackData("Еженедельный", "ratingId:2") },
+            });
+            var rating = DbUser.tempRating.OrderByDescending(item => item.MonthlyScore).ThenBy(item => item.Name);
+            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
+            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).MonthlyScore} очков\n" +
+                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).MonthlyScore} очков\n" +
+                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).MonthlyScore} очков\n";
+            if (pos == 1 || pos == 2)
+            {
+                await _bot.EditMessageText(id, msg.Id, textRating);
+                await _bot.EditMessageReplyMarkup(
+                    id,
+                    msg.Id,
+                    replyMarkup: keyboard
+                );
+                return;
+            }
+            textRating += ".\n.\n";
+            if (pos != 3 && pos != 4)
+            {
+                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).MonthlyScore} очков\n";
+            }
+            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).MonthlyScore} очков\n";
+            if (pos != rating.Count())
+                textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).MonthlyScore} очков\n";
+            await _bot.EditMessageText(id, msg.Id, textRating);
+            await _bot.EditMessageReplyMarkup(
+                id,
+                msg.Id,
+                replyMarkup: keyboard
+            );
+        }
+        public static async Task HandleCallbackQuery(CallbackQuery callbackQuery)
+        {
+            switch (callbackQuery.Data.Split(":")[1])
+            {
+                case "1":await SendDailyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message);break;
+                case "2": await SendWeeklyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message); break;
+                case "3": await SendMonthlyRating(callbackQuery.Message.Chat.Id, callbackQuery.Message); break;
+            }
+        }
         public static async Task SendKeyboardLink(Message message)
         {
             string keyboardInformationString = """
@@ -152,7 +284,7 @@ namespace OssetianVerbsTelegramBot
                 var secondTypeMessage = await _bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
                 messageIds.Add(secondTypeMessage.MessageId);
 
-                helpMessages[id] = messageIds;
+                messagesToDelete[id] = messageIds;
             }
             catch (Exception ex)
             {
@@ -166,8 +298,8 @@ namespace OssetianVerbsTelegramBot
         {
             try
             {
-                await _bot.DeleteMessages(userId,helpMessages[userId]);
-                helpMessages.Remove(userId);
+                await _bot.DeleteMessages(userId,messagesToDelete[userId]);
+                messagesToDelete.Remove(userId);
             }
             catch
             {
