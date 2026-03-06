@@ -71,7 +71,7 @@ namespace OssetianVerbsTelegramBot
                     _chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
                 }
 
-                if (MessageHelper.helpMessages.ContainsKey(chatId))
+                if (MessageHelper.messagesToDelete.ContainsKey(chatId))
                 {
                     await MessageHelper.SafeDeleteHelpMessages(chatId);
                 }
@@ -110,9 +110,11 @@ namespace OssetianVerbsTelegramBot
                             ITaskState taskDeclination = new TaskDeclination(_bot);
                             await taskDeclination.StartTask(message);
                             break;
-
                         case "⚙️ Статистика":
                             await MessageHelper.SendStatistics(chatId);
+                            break;
+                        case "🏆 Рейтинг":
+                            await MessageHelper.SendRating(chatId,message.Id);
                             break;
 
                         case "💡 Справка":
@@ -205,13 +207,17 @@ namespace OssetianVerbsTelegramBot
             var callBackData = callbackQuery.Data;
 
             if (callBackData == null) return;
+            if (callBackData.ToLower().Contains("ratingid"))
+            {
+                await MessageHelper.HandleCallbackQuery(callbackQuery);
+                return;
+            }
 
             if (!_taskSessions.ContainsKey(chatId))
                 return;
 
             if (callBackData.ToLower().Contains("oldbutton"))
                 return;
-
             var task = _taskSessions[chatId].Task;
             if (task is ICallBackTask taskCallBack)
                 await taskCallBack.HandleCallbackQuery(callbackQuery);

@@ -17,6 +17,7 @@ namespace OssetianVerbsTelegramBot
         private static Dictionary<string, List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
         private static Dictionary<string, int> tempScore = new Dictionary<string, int>();
         private static Dictionary<string, int> tempStreak = new Dictionary<string, int>();
+        public static readonly List<RatingItem> tempRating = new List<RatingItem>();
         public static readonly HashSet<long> allUsersId = new HashSet<long>();
         public static bool IsExistUser(long id) => allUsersId.Contains(id);
 
@@ -55,6 +56,21 @@ namespace OssetianVerbsTelegramBot
                 }
             }
             return ans;
+        }
+        public static async Task UpdateUserRating()
+        {
+            tempRating.Clear();
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
+            {
+                await conn.OpenAsync();
+                string sql = $"SELECT Id, Name, DailyScore, WeeklyScore, MonthlyScore FROM Users";
+                SqliteCommand command = new SqliteCommand(sql, conn);
+                SqliteDataReader reader = await command.ExecuteReaderAsync();
+                while (reader.Read())
+                {
+                    tempRating.Add(new RatingItem(Convert.ToInt64(reader[0]), reader[1].ToString(), (long)reader[2], (long)reader[3], (long)reader[4]));
+                }
+            }
         }
 
         public static async Task FillStat(string id)
