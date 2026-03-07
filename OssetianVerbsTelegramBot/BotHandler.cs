@@ -21,16 +21,15 @@ namespace OssetianVerbsTelegramBot
         readonly TelegramBotClient bot;
         readonly MessageHelper messageHelper;
         readonly CommandHandler commandHandler;
+        readonly ChatBot chatBot;
 
-        private static Dictionary<long, TestSession> _taskSessions = new();
-        private static Dictionary<long, ChatSession> _chatSessions = new();
-        YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
-        private YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
-        public BotHandler(TelegramBotClient bot,MessageHelper messageHelper,CommandHandler commandHandler)
+        public static Dictionary<long, TestSession> _taskSessions = new();
+        public BotHandler(TelegramBotClient bot,MessageHelper messageHelper,CommandHandler commandHandler, ChatBot chatBot)
         {
             this.bot = bot;
             this.messageHelper = messageHelper;
             this.commandHandler = commandHandler;
+            this.chatBot = chatBot;
         }
 
 
@@ -39,6 +38,7 @@ namespace OssetianVerbsTelegramBot
             await DbVerbImport.InitializeVerbs();
             await DbSentencesImport.InitializeSentences();
             await DbUser.InitializeAllUsers();
+
             bot.StartReceiving(UpdateHandler, ErrorHandler);
             Console.WriteLine("Бот запущен!");
 
@@ -71,16 +71,11 @@ namespace OssetianVerbsTelegramBot
                 if (!DbUser.IsExistUser(chatId))
                     await DbUser.InitialiseUser(message);
 
-                if (!_chatSessions.ContainsKey(chatId))
-                {
-                    _chatSessions[message.Chat.Id] = new ChatSession(chatId, false);
-                }
+                if (!chatBot.ContainsUser(chatId))
+                    chatBot.CreateSession(chatId);
 
                 if (messageHelper.helpMessages.ContainsKey(chatId))
-                {
                     await messageHelper.SafeDeleteHelpMessages(chatId);
-                }
-
 
 
                 if (commandHandler.IsCommand(message))
@@ -91,11 +86,11 @@ namespace OssetianVerbsTelegramBot
                     switch (text)
                     {
                         case "📝 Глаголы":
+                            chatBot.DisableChatMode(chatId);
                             await messageHelper.SendVerbMenu(chatId);
-                            _chatSessions[chatId].IsGptMode = false;
                             break;
                         case "🤖 Чат-бот (Beta)":
-                            _chatSessions[chatId].IsGptMode = true;
+                            chatBot.EnableChatMode(chatId);
                             await bot.SendMessage(chatId, "<b>Режим чат-бота включен</b> ✅", parseMode: ParseMode.Html);
                             break;
 
@@ -152,32 +147,12 @@ namespace OssetianVerbsTelegramBot
                             if (messageHelper.needFeedback.Contains(chatId))
                             {
                                 await messageHelper.SendReportToAllModerators(chatId, message);
-
                                 messageHelper.needFeedback.Remove(chatId);
                                 break;
                             }
 
-                            if (_chatSessions[chatId].IsGptMode)
-                            {
-                                Console.WriteLine("User(" + chatId + " - " + message.From?.Username ?? "undefind" + "): " + message.Text);
-
-                                var loadSmile = await bot.SendSticker(chatId, sticker: "CAACAgUAAxkBAAEVynlphwOBCtgySn0lY4gZRq60cHjnFgACFwsAAnpH2FSrntiSYBUw7ToE");
-
-                                var ruMessage = await yandexTranslateClient.TranslateTextAsync(message.Text, "os", "ru");
-
-                                _chatSessions[chatId].AddHistory($"User: {ruMessage}");
-
-                                var response = await yandexGptClient.SendRequestAsync(_chatSessions[chatId].ChatHistory);
-
-                                Console.WriteLine("GPT: " + response);
-
-                                _chatSessions[chatId].AddHistory($"GPT: {response}");
-
-                                await bot.SendMessage(chatId, $"<b>{await yandexTranslateClient.TranslateTextAsync(response, "ru", "os")}</b>", parseMode: ParseMode.Html);
-
-
-                                await bot.DeleteMessage(chatId, loadSmile.Id);
-                            }
+                            if (chatBot.IsChatModeEnabled(chatId))
+                                await chatBot.HandleMessage(message);
                             else
                             {
                                 if (_taskSessions.ContainsKey(chatId))
@@ -187,10 +162,9 @@ namespace OssetianVerbsTelegramBot
                                         await msgTask.HandleMessageAnswer(message);
                                 }
                                 else
-                                {
                                     await messageHelper.SendMainMenu(chatId);
-                                }
-                            }   break;
+                            }
+                            break;
                     }
                 }
                 messageHelper.needFeedback.Remove(chatId);
@@ -222,7 +196,7 @@ namespace OssetianVerbsTelegramBot
         }
 
 
-        public async Task DownloadSqliteDatabaseAsync(long adminChatId)
+        private async Task DownloadSqliteDatabaseAsync(long adminChatId)
         {
             var dbPath = DbVerbImport.dbPath;
 

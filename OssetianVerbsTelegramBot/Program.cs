@@ -16,6 +16,7 @@ internal class Program
         ServiceCollection services = new ServiceCollection();
         services.AddSingleton<MessageHelper>();
         services.AddSingleton<CommandHandler>();
+        services.AddSingleton<ChatBot>();
         services.AddSingleton<BotHandler>();
 
 

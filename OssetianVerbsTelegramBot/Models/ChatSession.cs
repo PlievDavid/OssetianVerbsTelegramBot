@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OssetianVerbsTelegramBot.Models
 {
-    internal class ChatSession
+    public class ChatSession
     {
         public long UserId { get; set; }
         private List<string> chatHistory;
