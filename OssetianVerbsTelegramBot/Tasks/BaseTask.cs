@@ -8,7 +8,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     public abstract class BaseTask : ITaskState
     {
-        protected private TestSession _session;
+        protected private TestSession? _session;
         protected long chatId;
         protected readonly TelegramBotClient _bot;
 
@@ -57,10 +57,9 @@ namespace OssetianVerbsTelegramBot.Tasks
                 }
             }
             else return;
-            text += isRight ? " ✅" : " ❌";
             var newKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData(text, "oldButton")
+                new InlineKeyboardButton(text, "oldButton"){Style = isRight ? KeyboardButtonStyle.Success : KeyboardButtonStyle.Danger},
             });
             await _bot.EditMessageReplyMarkup(chatId, msg.MessageId, newKeyboard);
         }
@@ -72,11 +71,6 @@ namespace OssetianVerbsTelegramBot.Tasks
             await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 
         }
-        protected virtual async Task HandleIncorrectAnswer()
-        {
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
-            await _bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
-                
-        }
+        protected abstract  Task HandleIncorrectAnswer();
     }
 }

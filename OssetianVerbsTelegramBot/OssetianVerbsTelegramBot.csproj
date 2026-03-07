@@ -13,7 +13,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="RestSharp" Version="113.1.0" />
     <PackageReference Include="SQLite" Version="3.13.0" />
-    <PackageReference Include="Telegram.Bot" Version="22.7.6" />
+    <PackageReference Include="Telegram.Bot" Version="22.9.0" />
   </ItemGroup>
 
   <ItemGroup>
