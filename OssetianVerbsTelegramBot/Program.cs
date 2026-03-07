@@ -1,5 +1,6 @@
 ﻿using DotNetEnv;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using OssetianVerbsTelegramBot;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
@@ -12,13 +13,22 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
+        ServiceCollection services = new ServiceCollection();
+        services.AddSingleton<MessageHelper>();
+        services.AddSingleton<CommandHandler>();
+        services.AddSingleton<BotHandler>();
+
+
+
 #if DEBUG
-        var botHandler = new BotHandler(EnvironmentManager.GetTestBotToken());
+        services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetTestBotToken()));
 
 #else
-        var botHandler = new BotHandler(EnvironmentManager.GetBotToken());
+        services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetBotToken()));
         
 #endif
+        var serviceProvider = services.BuildServiceProvider();
+        var botHandler = serviceProvider.GetRequiredService<BotHandler>();
         await botHandler.Start();
     }
 

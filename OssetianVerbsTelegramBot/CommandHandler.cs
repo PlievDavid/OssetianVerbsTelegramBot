@@ -9,14 +9,16 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace OssetianVerbsTelegramBot
 {
-    internal class CommandHandler
+    public class CommandHandler
     {
-        public static TelegramBotClient _bot;
-        public static void Initialize(TelegramBotClient bot)
+        public TelegramBotClient _bot;
+        public MessageHelper messageHelper;
+        public CommandHandler(TelegramBotClient bot, MessageHelper msgh)
         {
             _bot = bot;
+            messageHelper = msgh;
         }
-        public static bool IsCommand(Message msg)
+        public bool IsCommand(Message msg)
         {
             var command = msg.Text?.Trim();
             if (command == null)
@@ -26,7 +28,7 @@ namespace OssetianVerbsTelegramBot
             return false;
         }
 
-        public static async Task HandleCommand(Message CommandMsg)
+        public async Task HandleCommand(Message CommandMsg)
         {
             var commandSplit = CommandMsg.Text!.Split();
             var chatId = CommandMsg.Chat.Id;
@@ -34,12 +36,12 @@ namespace OssetianVerbsTelegramBot
             {
                 case "/start":
                     await DbUser.InitialiseUser(CommandMsg);
-                    await MessageHelper.SendKeyboardLink(CommandMsg);
-                    await MessageHelper.SendMainMenu(chatId);
+                    await messageHelper.SendKeyboardLink(CommandMsg);
+                    await messageHelper.SendMainMenu(chatId);
                     return;
 
                 case "/sendto":
-                    if (!MessageHelper.admins.Contains(chatId)) return;
+                    if (!messageHelper.admins.Contains(chatId)) return;
                     if (commandSplit.Length <= 2) return;
                     if (!Int64.TryParse(commandSplit[1], out long recieverId)) return;
                     if(!DbUser.allUsersId.Contains(recieverId))

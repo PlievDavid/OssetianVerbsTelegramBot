@@ -12,18 +12,18 @@ namespace OssetianVerbsTelegramBot
 {
     public class MessageHelper
     {
-        static TelegramBotClient _bot;
-        public static long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
+        TelegramBotClient _bot;
+        public long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
                                           //Геор        Давид       Алан     МД
-        public static long[] moderators = { 946534275 , 2033844706, 6242358847 };
-        public static HashSet<long> needFeedback = new();
-        public static Dictionary<long, List<int>> helpMessages = new();
-        public static void Initialize(TelegramBotClient bot)
+        public long[] moderators = { 946534275 , 2033844706, 6242358847 };
+        public HashSet<long> needFeedback = new();
+        public Dictionary<long, List<int>> helpMessages = new();
+        public MessageHelper(TelegramBotClient bot)
         {
             _bot = bot;
         }
 
-        public static async Task SendAdminMenu(long chatId)
+        public async Task SendAdminMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Backup Базы данных") },
@@ -36,7 +36,7 @@ namespace OssetianVerbsTelegramBot
                text: "Добро пожаловать🛠️", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
-        public static async Task SendVerbMenu(long chatId)
+        public async Task SendVerbMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]
             {
@@ -64,7 +64,7 @@ namespace OssetianVerbsTelegramBot
                 text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
-        public static async Task SendMainMenu(long chatId)
+        public async Task SendMainMenu(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new[]{
                 new[] { new KeyboardButton("📝 Глаголы") },
@@ -92,7 +92,7 @@ namespace OssetianVerbsTelegramBot
                 text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
-        public static  async Task SendStatistics(long id)
+        public  async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
             string textStatistics = "Статистика правильных ответов: \n";
@@ -103,7 +103,7 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(id, textStatistics);
         }
 
-        public static async Task SendKeyboardLink(Message message)
+        public async Task SendKeyboardLink(Message message)
         {
             string keyboardInformationString = """
                 Чтобы пользоваться всеми функциями бота, вам понадобится «Яндекс Клавиатура»
@@ -118,7 +118,7 @@ namespace OssetianVerbsTelegramBot
             await _bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
         }
 
-        public static async Task SendHelp(long id, int msgId)
+        public async Task SendHelp(long id, int msgId)
         {
             var messageIds = new List<int>{ msgId };
             try
@@ -163,7 +163,7 @@ namespace OssetianVerbsTelegramBot
             
 
         }
-        public static async Task SafeDeleteHelpMessages(long userId)
+        public async Task SafeDeleteHelpMessages(long userId)
         {
             try
             {
@@ -176,7 +176,7 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
-        public static async Task SendReportToAllModerators(long reporterId,Message message)
+        public async Task SendReportToAllModerators(long reporterId,Message message)
         {
             foreach (var moder in moderators)
             {
@@ -186,16 +186,19 @@ namespace OssetianVerbsTelegramBot
             }
             await _bot.SendMessage(reporterId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
 
-            await MessageHelper.SendMainMenu(reporterId);
+            await SendMainMenu(reporterId);
         }
 
-        public static async Task SendReportHelp(long chatId)
+        public async Task SendReportHelp(long chatId)
         {
             var keyboard = new ReplyKeyboardMarkup(new KeyboardButton("🔙 Отмена"))
             {
                 ResizeKeyboard = true
             };
-            await _bot.SendMessage(chatId, "Если есть вопросы или заметили ошибки в работе бота, напишите сюда и ваше сообщение будет передано модераторам:", replyMarkup: keyboard);
+            await _bot.SendMessage(
+                chatId,
+                "Если есть вопросы или заметили ошибки в работе бота, напишите сюда и ваше сообщение будет передано модераторам:",
+                replyMarkup: keyboard);
         }
 
     }

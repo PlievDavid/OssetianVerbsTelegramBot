@@ -8,7 +8,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 {
     public abstract class BaseTask : ITaskState
     {
-        protected private TestSession _session;
+        protected private TestSession? _session;
         protected long chatId;
         protected readonly TelegramBotClient _bot;
 
