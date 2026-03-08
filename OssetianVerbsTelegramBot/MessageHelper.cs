@@ -11,18 +11,15 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot
 {
-    public class MessageHelper
+    public class MessageHelper(TelegramBotClient bot)
     {
-        TelegramBotClient _bot;
+        TelegramBotClient bot = bot;
+
         public long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
                                           //Геор        Давид       Алан     МД
         public long[] moderators = { 946534275 , 2033844706, 6242358847 };
         public HashSet<long> needFeedback = new();
-        public Dictionary<long, List<int>> helpMessages = new();
-        public MessageHelper(TelegramBotClient bot)
-        {
-            _bot = bot;
-        }
+        public Dictionary<long, List<int>> messagesToDelete = new();
 
         public async Task SendAdminMenu(long chatId)
         {
@@ -33,7 +30,7 @@ namespace OssetianVerbsTelegramBot
             {
                 ResizeKeyboard = true
             };
-            await _bot.SendMessage(chatId: chatId,
+            await bot.SendMessage(chatId: chatId,
                text: "Добро пожаловать🛠️", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
@@ -62,7 +59,7 @@ namespace OssetianVerbsTelegramBot
                 ResizeKeyboard = true
             };
 
-            await _bot.SendMessage(chatId: chatId,
+            await bot.SendMessage(chatId: chatId,
                 text: "<b>Выберите задание в меню:</b>", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
@@ -90,11 +87,11 @@ namespace OssetianVerbsTelegramBot
             }
 
 
-            await _bot.SendMessage(chatId: chatId,
+            await bot.SendMessage(chatId: chatId,
                 text: "<b> Навигация осуществляется с помощью меню</b> 👇", replyMarkup: keyboard, parseMode: ParseMode.Html);
         }
 
-        public  async Task SendStatistics(long id)
+        public async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
             string textStatistics = "Статистика правильных ответов: \n";
@@ -102,17 +99,17 @@ namespace OssetianVerbsTelegramBot
             {
                 textStatistics += stat.ToString() + "\n";
             }
-            await _bot.SendMessage(id, textStatistics);
+            await bot.SendMessage(id, textStatistics);
         }
-        public static async Task SendRating(long id, int msgId)
+        public async Task SendRating(long id, int msgId)
         {
             await DbUser.UpdateUserRating();
-            var ratingMsg = await _bot.SendMessage(id, "Загрузка...");
+            var ratingMsg = await bot.SendMessage(id, "Загрузка...");
             await SendDailyRating(id, ratingMsg);
             messagesToDelete[id] = new List<int> { ratingMsg.Id, msgId };
         }
 
-        private static async Task SendDailyRating(long id, Message msg)
+        private async Task SendDailyRating(long id, Message msg)
         {
             var textRating = "Ежедневный рейтинг:\n";
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -127,8 +124,8 @@ namespace OssetianVerbsTelegramBot
                 $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).DailyScore} очков\n";
             if (pos == 1 || pos== 2)
             {
-                await _bot.EditMessageText(id, msg.Id, textRating);
-                await _bot.EditMessageReplyMarkup(
+                await bot.EditMessageText(id, msg.Id, textRating);
+                await bot.EditMessageReplyMarkup(
                     id,
                     msg.Id,
                     replyMarkup: keyboard
@@ -143,14 +140,14 @@ namespace OssetianVerbsTelegramBot
             textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).DailyScore} очков\n";
             if (pos!=rating.Count())
                 textRating += $"{pos+1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).DailyScore} очков\n";
-            await _bot.EditMessageText(id, msg.Id, textRating);
-            await _bot.EditMessageReplyMarkup(
+            await bot.EditMessageText(id, msg.Id, textRating);
+            await bot.EditMessageReplyMarkup(
                 id,
                 msg.Id,
                 replyMarkup: keyboard
             );
         }
-        private static async Task SendWeeklyRating(long id, Message msg)
+        private async Task SendWeeklyRating(long id, Message msg)
         {
             var textRating = "Еженедельный рейтинг:\n";
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -165,8 +162,8 @@ namespace OssetianVerbsTelegramBot
                 $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).WeeklyScore} очков\n";
             if (pos == 1 || pos == 2)
             {
-                await _bot.EditMessageText(id, msg.Id, textRating);
-                await _bot.EditMessageReplyMarkup(
+                await bot.EditMessageText(id, msg.Id, textRating);
+                await bot.EditMessageReplyMarkup(
                     id,
                     msg.Id,
                     replyMarkup: keyboard
@@ -181,14 +178,14 @@ namespace OssetianVerbsTelegramBot
             textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).WeeklyScore} очков\n";
             if (pos != rating.Count())
                 textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).WeeklyScore} очков\n";
-            await _bot.EditMessageText(id, msg.Id, textRating);
-            await _bot.EditMessageReplyMarkup(
+            await bot.EditMessageText(id, msg.Id, textRating);
+            await bot.EditMessageReplyMarkup(
                 id,
                 msg.Id,
                 replyMarkup: keyboard
             );
         }
-        private static async Task SendMonthlyRating(long id, Message msg)
+        private async Task SendMonthlyRating(long id, Message msg)
         {
             var textRating = "Ежемесячный рейтинг:\n";
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -203,8 +200,8 @@ namespace OssetianVerbsTelegramBot
                 $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).MonthlyScore} очков\n";
             if (pos == 1 || pos == 2)
             {
-                await _bot.EditMessageText(id, msg.Id, textRating);
-                await _bot.EditMessageReplyMarkup(
+                await bot.EditMessageText(id, msg.Id, textRating);
+                await bot.EditMessageReplyMarkup(
                     id,
                     msg.Id,
                     replyMarkup: keyboard
@@ -219,14 +216,14 @@ namespace OssetianVerbsTelegramBot
             textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).MonthlyScore} очков\n";
             if (pos != rating.Count())
                 textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).MonthlyScore} очков\n";
-            await _bot.EditMessageText(id, msg.Id, textRating);
-            await _bot.EditMessageReplyMarkup(
+            await bot.EditMessageText(id, msg.Id, textRating);
+            await bot.EditMessageReplyMarkup(
                 id,
                 msg.Id,
                 replyMarkup: keyboard
             );
         }
-        public static async Task HandleCallbackQuery(CallbackQuery callbackQuery)
+        public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             switch (callbackQuery.Data?.Split(":")[1])
             {
@@ -235,7 +232,7 @@ namespace OssetianVerbsTelegramBot
                 case "3": await SendMonthlyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message); break;
             }
         }
-        public static async Task SendKeyboardLink(Message message)
+        public async Task SendKeyboardLink(Message message)
         {
             string keyboardInformationString = """
                 Чтобы пользоваться всеми функциями бота, вам понадобится «Яндекс Клавиатура»
@@ -247,7 +244,7 @@ namespace OssetianVerbsTelegramBot
                     new InlineKeyboardButton("IOS", "https://apps.apple.com/ru/app/яндекс-клавиатура/id1053139327")
                 });
 
-            await _bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
+            await bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
         }
 
         public async Task SendHelp(long id, int msgId)
@@ -259,7 +256,7 @@ namespace OssetianVerbsTelegramBot
 
                 using (var imageFile = File.Open(imagePath, FileMode.Open, FileAccess.Read))
                 {
-                    var photoMessage = await _bot.SendPhoto( id,imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
+                    var photoMessage = await bot.SendPhoto( id,imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
                     messageIds.Add(photoMessage.MessageId);
                 }
                 var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
@@ -272,7 +269,7 @@ namespace OssetianVerbsTelegramBot
                 {
                     firstTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
                 }
-                var firstTypeMessage = await _bot.SendMessage(id, firstTypeText.ToString(), parseMode: ParseMode.Html);
+                var firstTypeMessage = await bot.SendMessage(id, firstTypeText.ToString(), parseMode: ParseMode.Html);
                 messageIds.Add(firstTypeMessage.MessageId);
 
                 var secondTypeText = new StringBuilder();
@@ -282,7 +279,7 @@ namespace OssetianVerbsTelegramBot
                 {
                     secondTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
                 }
-                var secondTypeMessage = await _bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
+                var secondTypeMessage = await bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
                 messageIds.Add(secondTypeMessage.MessageId);
 
                 messagesToDelete[id] = messageIds;
@@ -299,7 +296,7 @@ namespace OssetianVerbsTelegramBot
         {
             try
             {
-                await _bot.DeleteMessages(userId,messagesToDelete[userId]);
+                await bot.DeleteMessages(userId,messagesToDelete[userId]);
                 messagesToDelete.Remove(userId);
             }
             catch
@@ -312,11 +309,11 @@ namespace OssetianVerbsTelegramBot
         {
             foreach (var moder in moderators)
             {
-                await _bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
+                await bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
                     $"Отправитель: {reporterId}  @{message?.From?.Username ??
                     message?.From?.FirstName ?? "скрыл юзернейм"} :\n" + message?.Text);
             }
-            await _bot.SendMessage(reporterId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
+            await bot.SendMessage(reporterId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
 
             await SendMainMenu(reporterId);
         }
@@ -327,7 +324,7 @@ namespace OssetianVerbsTelegramBot
             {
                 ResizeKeyboard = true
             };
-            await _bot.SendMessage(
+            await bot.SendMessage(
                 chatId,
                 "Если есть вопросы или заметили ошибки в работе бота, напишите сюда и ваше сообщение будет передано модераторам:",
                 replyMarkup: keyboard);

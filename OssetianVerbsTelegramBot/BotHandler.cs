@@ -15,23 +15,15 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot
 {
-    public class BotHandler
+    public class BotHandler(TelegramBotClient bot, MessageHelper messageHelper, CommandHandler commandHandler, ChatBot chatBot)
     {
 
-        readonly TelegramBotClient bot;
-        readonly MessageHelper messageHelper;
-        readonly CommandHandler commandHandler;
-        readonly ChatBot chatBot;
+        readonly TelegramBotClient bot = bot;
+        readonly MessageHelper messageHelper = messageHelper;
+        readonly CommandHandler commandHandler = commandHandler;
+        readonly ChatBot chatBot = chatBot;
 
         public static Dictionary<long, TestSession> _taskSessions = new();
-        public BotHandler(TelegramBotClient bot,MessageHelper messageHelper,CommandHandler commandHandler, ChatBot chatBot)
-        {
-            this.bot = bot;
-            this.messageHelper = messageHelper;
-            this.commandHandler = commandHandler;
-            this.chatBot = chatBot;
-        }
-
 
         public async Task Start()
         {
@@ -74,7 +66,7 @@ namespace OssetianVerbsTelegramBot
                 if (!chatBot.ContainsUser(chatId))
                     chatBot.CreateSession(chatId);
 
-                if (messageHelper.helpMessages.ContainsKey(chatId))
+                if (messageHelper.messagesToDelete.ContainsKey(chatId))
                     await messageHelper.SafeDeleteHelpMessages(chatId);
 
 
@@ -114,7 +106,7 @@ namespace OssetianVerbsTelegramBot
                             await messageHelper.SendStatistics(chatId);
                             break;
                         case "🏆 Рейтинг":
-                            await MessageHelper.SendRating(chatId,message.Id);
+                            await messageHelper.SendRating(chatId,message.Id);
                             break;
 
                         case "💡 Справка":
@@ -181,15 +173,14 @@ namespace OssetianVerbsTelegramBot
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             await bot.AnswerCallbackQuery(callbackQuery.Id);
-            var chatId = callbackQuery.Message.Chat.Id;
             var callBackData = callbackQuery.Data;
 
             if (callBackData == null) return;
 
             var chatId = callbackQuery!.Message!.Chat.Id;
-            if (callBackData.Contains("ratingid"))
+            if (callBackData.ToLower().Contains("ratingid"))
             {
-                await MessageHelper.HandleCallbackQuery(callbackQuery);
+                await messageHelper.HandleCallbackQuery(callbackQuery);
                 return;
             }
 

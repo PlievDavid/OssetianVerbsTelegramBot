@@ -19,7 +19,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(_session.Verbs[_session.CurrentIndex].Inf);
             _session.Sentences.Add(sentence);
-            await _bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task HandleMessageAnswer(Message message)
@@ -36,13 +36,13 @@ namespace OssetianVerbsTelegramBot.Tasks
                     {
                         _session.Score++;
                         await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
-                        await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                        await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                         break;
                     }
                     if (i==temp.Count()-1)
                     {
                         await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
-                        await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+                        await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
                     }
                 }
             }
@@ -69,7 +69,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
             await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
-            await _bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+            await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
 
         }
 
@@ -77,7 +77,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             _session.Score++;
             await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
-            await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+            await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
         }
     }

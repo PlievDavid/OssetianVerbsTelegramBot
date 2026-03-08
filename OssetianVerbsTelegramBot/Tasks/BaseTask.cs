@@ -6,16 +6,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    public abstract class BaseTask : ITaskState
+    public abstract class BaseTask(TelegramBotClient bot) : ITaskState
     {
-        protected private TestSession? _session;
+        protected private TestSession _session;
         protected long chatId;
-        protected readonly TelegramBotClient _bot;
-
-        protected BaseTask(TelegramBotClient bot)
-        {
-            _bot = bot;
-        }
+        protected readonly TelegramBotClient bot = bot;
 
         public async Task StartTask(Message message)
         {
@@ -33,7 +28,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         public virtual async Task EndTask()
         {
-            await _bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_session.Score}/{_session.CurrentIndex}");
+            await bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_session.Score}/{_session.CurrentIndex}");
             await DbUser.FillStat(chatId.ToString());
             BotHandler.RemoveTaskSession(_session);
         }
@@ -61,14 +56,14 @@ namespace OssetianVerbsTelegramBot.Tasks
             {
                 new InlineKeyboardButton(text, "oldButton"){Style = isRight ? KeyboardButtonStyle.Success : KeyboardButtonStyle.Danger},
             });
-            await _bot.EditMessageReplyMarkup(chatId, msg.MessageId, newKeyboard);
+            await bot.EditMessageReplyMarkup(chatId, msg.MessageId, newKeyboard);
         }
 
         protected virtual async Task HandleCorrectAnswer()
         {
             _session.Score++;
             await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
-            await _bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+            await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 
         }
         protected abstract  Task HandleIncorrectAnswer();

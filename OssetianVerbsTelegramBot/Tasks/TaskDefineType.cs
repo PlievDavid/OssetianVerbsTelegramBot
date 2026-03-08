@@ -23,7 +23,7 @@ namespace OssetianVerbsTelegramBot.Tasks
                 new[] { InlineKeyboardButton.WithCallbackData("Тип 1 -тон (переходный) ", "defineTypeAns:1") },
                 new[] { InlineKeyboardButton.WithCallbackData("Тип 2 -тӕн (непереходный)", "defineTypeAns:2") }
             });
-            await _bot.SendMessage(
+            await bot.SendMessage(
                 chatId,
                 $"№{_session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
                 replyMarkup: keyboard,
@@ -63,7 +63,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
             var type = _session.Verbs[_session.CurrentIndex].Type == 1 ? "тип 1 (переходный)" : "тип 2 (непереходный)";
-            await _bot.SendMessage(chatId, "Неверно! Это " + type);
+            await bot.SendMessage(chatId, "Неверно! Это " + type);
         }
     }
 }

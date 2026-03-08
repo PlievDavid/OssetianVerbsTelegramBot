@@ -11,11 +11,11 @@ namespace OssetianVerbsTelegramBot
     {
         public static string GetBotToken()
         {
-            string token = "";
+            string? token = null;
             if (File.Exists(".env"))
             {
                 Env.Load();
-                token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
+                token = Environment.GetEnvironmentVariable("TELEGRAMbot_TOKEN");
                 if (token != null)
                 {
                     return token;
@@ -25,11 +25,11 @@ namespace OssetianVerbsTelegramBot
         }
         public static string GetTestBotToken()
         {
-            string token = "";
+            string? token = null;
             if (File.Exists(".env"))
             {
                 Env.Load();
-                token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN_TEST");
+                token = Environment.GetEnvironmentVariable("TELEGRAMbot_TOKEN_TEST");
                 if (token != null)
                 {
                     return token;
@@ -40,7 +40,7 @@ namespace OssetianVerbsTelegramBot
 
         public static string GetYandexGptKey()
         {
-            string token = "";
+            string? token = null;
             if (File.Exists(".env"))
             {
                 Env.Load();
@@ -55,7 +55,7 @@ namespace OssetianVerbsTelegramBot
 
         public static string GetYandexProjectId()
         {
-            string token = "";
+            string? token = null;
             if (File.Exists(".env"))
             {
                 Env.Load();
