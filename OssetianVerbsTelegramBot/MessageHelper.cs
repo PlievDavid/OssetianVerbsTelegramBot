@@ -101,137 +101,152 @@ namespace OssetianVerbsTelegramBot
             }
             await bot.SendMessage(id, textStatistics);
         }
+
+
+        #region Все что связано с РЕЙТИНГОМ
+        private enum RatingType
+        {
+            Daily,
+            Weekly,
+            Monthly
+        }
+
         public async Task SendRating(long id, int msgId)
         {
             await DbUser.UpdateUserRating();
             var ratingMsg = await bot.SendMessage(id, "Загрузка...");
-            await SendDailyRating(id, ratingMsg);
+            await SendRating(id, ratingMsg, RatingType.Daily);
             messagesToDelete[id] = new List<int> { ratingMsg.Id, msgId };
         }
 
-        private async Task SendDailyRating(long id, Message msg)
+        private InlineKeyboardMarkup CreateRatingKeyboard(RatingType currentType)
         {
-            var textRating = "Ежедневный рейтинг:\n";
-            var keyboard = new InlineKeyboardMarkup(new[]
+            var buttons = new List<InlineKeyboardButton[]>();
+
+            var otherTypes = new Dictionary<RatingType, (string text, string callback)>
             {
-                new[] { InlineKeyboardButton.WithCallbackData("Еженедельный", "ratingId:2") },
-                new[] { InlineKeyboardButton.WithCallbackData("Ежемесячный", "ratingId:3") },
-            });
-            var rating = DbUser.tempRating.OrderByDescending(item => item.DailyScore).ThenBy(item => item.Name);
-            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
-            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).DailyScore} очков\n" +
-                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).DailyScore} очков\n" +
-                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).DailyScore} очков\n";
-            if (pos == 1 || pos== 2)
+                [RatingType.Daily] = ("Ежедневный", "ratingId:1"),
+                [RatingType.Weekly] = ("Еженедельный", "ratingId:2"),
+                [RatingType.Monthly] = ("Ежемесячный", "ratingId:3")
+            };
+
+            foreach (var type in Enum.GetValues<RatingType>())
             {
-                await bot.EditMessageText(id, msg.Id, textRating);
-                await bot.EditMessageReplyMarkup(
-                    id,
-                    msg.Id,
-                    replyMarkup: keyboard
-                );
-                return;
+                if (type != currentType)
+                {
+                    var (text, callback) = otherTypes[type];
+                    buttons.Add(new[] { InlineKeyboardButton.WithCallbackData(text, callback) });
+                }
             }
-            textRating += ".\n.\n";
-            if (pos !=3 && pos!=4)
-            {
-                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).DailyScore} очков\n";
-            }
-            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).DailyScore} очков\n";
-            if (pos!=rating.Count())
-                textRating += $"{pos+1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).DailyScore} очков\n";
-            await bot.EditMessageText(id, msg.Id, textRating);
-            await bot.EditMessageReplyMarkup(
-                id,
-                msg.Id,
-                replyMarkup: keyboard
-            );
+
+            return new InlineKeyboardMarkup(buttons);
         }
-        private async Task SendWeeklyRating(long id, Message msg)
+
+        
+
+        private async Task SendRating(long id, Message msg, RatingType ratingType)
         {
-            var textRating = "Еженедельный рейтинг:\n";
-            var keyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[] { InlineKeyboardButton.WithCallbackData("Ежедневный", "ratingId:1") },
-                new[] { InlineKeyboardButton.WithCallbackData("Ежемесячный", "ratingId:3") },
-            });
-            var rating = DbUser.tempRating.OrderByDescending(item => item.WeeklyScore).ThenBy(item => item.Name);
-            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
-            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).WeeklyScore} очков\n" +
-                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).WeeklyScore} очков\n" +
-                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).WeeklyScore} очков\n";
-            if (pos == 1 || pos == 2)
-            {
-                await bot.EditMessageText(id, msg.Id, textRating);
-                await bot.EditMessageReplyMarkup(
-                    id,
-                    msg.Id,
-                    replyMarkup: keyboard
-                );
-                return;
-            }
-            textRating += ".\n.\n";
-            if (pos != 3 && pos != 4)
-            {
-                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).WeeklyScore} очков\n";
-            }
-            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).WeeklyScore} очков\n";
-            if (pos != rating.Count())
-                textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).WeeklyScore} очков\n";
+            var (title, scoreSelector) = GetRatingInfo(ratingType);
+            var textRating = $"{title}:\n";
+
+            var keyboard = CreateRatingKeyboard(ratingType);
+
+            var rating = GetSortedRating(ratingType);
+
+            int pos = GetUserPosition(rating, id);
+
+            textRating = BuildRatingText(textRating, rating, pos, scoreSelector);
+
             await bot.EditMessageText(id, msg.Id, textRating);
-            await bot.EditMessageReplyMarkup(
-                id,
-                msg.Id,
-                replyMarkup: keyboard
-            );
+            await bot.EditMessageReplyMarkup(id, msg.Id, replyMarkup: keyboard);
         }
-        private async Task SendMonthlyRating(long id, Message msg)
+
+        private (string title, Func<RatingItem, int> scoreSelector ) GetRatingInfo(RatingType type)
         {
-            var textRating = "Ежемесячный рейтинг:\n";
-            var keyboard = new InlineKeyboardMarkup(new[]
+            
+            return type switch
             {
-                new[] { InlineKeyboardButton.WithCallbackData("Ежедневный", "ratingId:1") },
-                new[] { InlineKeyboardButton.WithCallbackData("Еженедельный", "ratingId:2") },
-            });
-            var rating = DbUser.tempRating.OrderByDescending(item => item.MonthlyScore).ThenBy(item => item.Name);
-            int pos = rating.Count() - rating.SkipWhile(item => item.UserId != id).Count() + 1;
-            textRating += $"1. {rating.ElementAt(0).Name} - {rating.ElementAt(0).MonthlyScore} очков\n" +
-                $"2. {rating.ElementAt(1).Name} - {rating.ElementAt(1).MonthlyScore} очков\n" +
-                $"3. {rating.ElementAt(2).Name}  -  {rating.ElementAt(2).MonthlyScore} очков\n";
-            if (pos == 1 || pos == 2)
+                RatingType.Daily => (
+                    "Ежедневный рейтинг",
+                    u => u.DailyScore   
+                ),
+                RatingType.Weekly => (
+                    "Еженедельный рейтинг",
+                    u => u.WeeklyScore
+                ),
+                RatingType.Monthly => (
+                    "Ежемесячный рейтинг",
+                    u => u.MonthlyScore
+                ),
+                _ => throw new ArgumentException("Неизвестный тип рейтинга")
+            };
+        }
+
+        private int GetUserPosition(IEnumerable<RatingItem> rating, long userId)
+        {
+            var ratingList = rating.ToList(); // Материализуем список для многократного использования
+            int index = ratingList.FindIndex(item => item.UserId == userId);
+            return index >= 0 ? index + 1 : ratingList.Count + 1;
+        }
+
+        private string BuildRatingText(string header, IEnumerable<RatingItem> rating, int userPos, Func<RatingItem, int> scoreSelector)
+        {
+            var ratingList = rating.ToList();
+            var sb = new StringBuilder(header);
+
+            // Топ-3
+            for (int i = 0; i < Math.Min(3, ratingList.Count); i++)
             {
-                await bot.EditMessageText(id, msg.Id, textRating);
-                await bot.EditMessageReplyMarkup(
-                    id,
-                    msg.Id,
-                    replyMarkup: keyboard
-                );
-                return;
+                var user = ratingList[i];
+                sb.AppendLine($"{i + 1}. {user.Name} - {scoreSelector(user)} очков");
             }
-            textRating += ".\n.\n";
-            if (pos != 3 && pos != 4)
+
+            // Если пользователь не в топ-3
+            if (userPos > 3)
             {
-                textRating += $"{pos - 1}. {rating.ElementAt(pos - 2).Name} - {rating.ElementAt(pos - 2).MonthlyScore} очков\n";
+                sb.AppendLine(".\n.");
+
+                // Показываем пользователя с соседями
+                int start = Math.Max(3, userPos - 2);
+                int end = Math.Min(ratingList.Count, userPos + 1);
+
+                for (int i = start; i <= end; i++)
+                {
+                    if (i != userPos - 1 && i != userPos && i != userPos + 1) continue;
+
+                    var user = ratingList[i - 1];
+                    sb.AppendLine($"{i}. {user.Name} - {scoreSelector(user)} очков");
+                }
             }
-            textRating += $"{pos}. {rating.ElementAt(pos - 1).Name} - {rating.ElementAt(pos - 1).MonthlyScore} очков\n";
-            if (pos != rating.Count())
-                textRating += $"{pos + 1}. {rating.ElementAt(pos).Name} - {rating.ElementAt(pos).MonthlyScore} очков\n";
-            await bot.EditMessageText(id, msg.Id, textRating);
-            await bot.EditMessageReplyMarkup(
-                id,
-                msg.Id,
-                replyMarkup: keyboard
-            );
+
+            return sb.ToString();
+        }
+
+        private IEnumerable<RatingItem> GetSortedRating(RatingType type)
+        {
+            return type switch
+            {
+                RatingType.Daily => DbUser.tempRating.OrderByDescending(item => item.DailyScore).ThenBy(item => item.Name),
+                RatingType.Weekly => DbUser.tempRating.OrderByDescending(item => item.WeeklyScore).ThenBy(item => item.Name),
+                RatingType.Monthly => DbUser.tempRating.OrderByDescending(item => item.MonthlyScore).ThenBy(item => item.Name),
+                _ => throw new ArgumentException("Неизвестный тип рейтинга")
+            };
         }
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
+            var chatId = callbackQuery.Message.Chat.Id;
+            var msg = callbackQuery.Message;
+
             switch (callbackQuery.Data?.Split(":")[1])
             {
-                case "1":await SendDailyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message);break;
-                case "2": await SendWeeklyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message); break;
-                case "3": await SendMonthlyRating(callbackQuery.Message!.Chat.Id, callbackQuery.Message); break;
+                case "1":await SendRating(chatId, msg, RatingType.Daily);break;
+                case "2": await SendRating(chatId, msg, RatingType.Weekly); break;
+                case "3": await SendRating(chatId, msg, RatingType.Monthly); break;
             }
         }
+        #endregion
+
+
         public async Task SendKeyboardLink(Message message)
         {
             string keyboardInformationString = """
