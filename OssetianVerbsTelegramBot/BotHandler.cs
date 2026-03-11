@@ -32,6 +32,7 @@ namespace OssetianVerbsTelegramBot
             await DbUser.InitializeAllUsers();
 
             bot.StartReceiving(UpdateHandler, ErrorHandler);
+            ScoreResetService.Start();
             Console.WriteLine("Бот запущен!");
 
 
