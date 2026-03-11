@@ -226,9 +226,9 @@ namespace OssetianVerbsTelegramBot
         {
             return type switch
             {
-                RatingType.Daily => DbUser.tempRating.OrderByDescending(item => item.DailyScore).ThenBy(item => item.Name),
-                RatingType.Weekly => DbUser.tempRating.OrderByDescending(item => item.WeeklyScore).ThenBy(item => item.Name),
-                RatingType.Monthly => DbUser.tempRating.OrderByDescending(item => item.MonthlyScore).ThenBy(item => item.Name),
+                RatingType.Daily => DbUser.tempRating.OrderByDescending(item => item.DailyScore),
+                RatingType.Weekly => DbUser.tempRating.OrderByDescending(item => item.WeeklyScore),
+                RatingType.Monthly => DbUser.tempRating.OrderByDescending(item => item.MonthlyScore),
                 _ => throw new ArgumentException("Неизвестный тип рейтинга")
             };
         }
