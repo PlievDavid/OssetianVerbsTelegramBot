@@ -18,8 +18,10 @@ namespace OssetianVerbsTelegramBot
         {
             while (true)
             {
-                var nextReset = DateTime.Now.Date.AddDays(1);
-                var delay = nextReset - DateTime.Now;    
+                TimeZoneInfo moscowTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time");
+                DateTime nowMoscow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, moscowTimeZone);
+                DateTime tomorrowMoscow = nowMoscow.Date.AddDays(1);
+                TimeSpan delay = tomorrowMoscow - nowMoscow;
 
                 if (delay < TimeSpan.Zero)
                     delay = TimeSpan.Zero;
@@ -28,10 +30,10 @@ namespace OssetianVerbsTelegramBot
 
                 await ResetDaily();
 
-                if (nextReset.DayOfWeek == DayOfWeek.Monday)
+                if (tomorrowMoscow.DayOfWeek == DayOfWeek.Monday)
                     await ResetWeekly();
 
-                if (nextReset.Day == 1)
+                if (tomorrowMoscow.Day == 1)
                     await ResetMonthly();
             }
         }
