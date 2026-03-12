@@ -35,13 +35,13 @@ namespace OssetianVerbsTelegramBot.Tasks
                     if (msgText == temp[i])
                     {
                         _session.Score++;
-                        await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
+                        await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
                         await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                         break;
                     }
                     if (i==temp.Count()-1)
                     {
-                        await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
+                        await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
                         await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
                     }
                 }
@@ -68,7 +68,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         protected override async Task HandleIncorrectAnswer()
         {
             var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
             await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
 
         }
@@ -76,7 +76,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         protected override async Task HandleCorrectAnswer()
         {
             _session.Score++;
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
             await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
 
         }

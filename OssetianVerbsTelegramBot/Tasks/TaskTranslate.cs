@@ -56,7 +56,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         protected override async Task HandleIncorrectAnswer()
         {
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
             await bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
         }
     }

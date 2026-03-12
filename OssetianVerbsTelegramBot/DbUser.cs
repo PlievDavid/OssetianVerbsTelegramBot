@@ -8,16 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace OssetianVerbsTelegramBot
 {
     public static class DbUser
     {
         public static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
+
         private static Dictionary<string, List<StatItem>> tempStat = new Dictionary<string, List<StatItem>>();
         private static Dictionary<string, int> tempScore = new Dictionary<string, int>();
-        private static Dictionary<string, int> tempStreak = new Dictionary<string, int>();
+
         public static readonly List<RatingItem> tempRating = new List<RatingItem>();
+
         public static readonly HashSet<long> allUsersId = new HashSet<long>();
         public static bool IsExistUser(long id) => allUsersId.Contains(id);
 
@@ -36,27 +39,29 @@ namespace OssetianVerbsTelegramBot
 
         public static async Task<List<StatItem>> GetUserStatById(string id)
         {
-            var ans = new List<StatItem> { };
+            var result = new List<StatItem> { };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
+                string sql = $"SELECT Verb, Correct, Incorrect FROM UsersWordStatistic WHERE UserId = {id} " +
+                    $"ORDER BY Correct DESC";
                 await conn.OpenAsync();
-                using (SqliteCommand cmd = new SqliteCommand($"SELECT Stat, Streak FROM Users WHERE Id = '{id}'", conn))
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
-                    SqliteDataReader reader = await cmd.ExecuteReaderAsync();
-                    if (await reader.ReadAsync())
+                    using (SqliteDataReader reader = await cmd.ExecuteReaderAsync())
                     {
-                        tempStreak[id] = reader.GetInt32(reader.FieldCount - 1); //Convert.ToInt32(reader[reader.FieldCount - 1]);
-                        var temp = reader.GetString(0).Split("&");
-                        foreach (var item in temp)
+                        while (await reader.ReadAsync())
                         {
-                            if (string.IsNullOrEmpty(item))
-                                return ans;
-                            ans.Add(new StatItem(item));
+                            var verb = reader.GetString(0);
+                            int correct = reader.GetInt32(1);
+                            int incorrect = reader.GetInt32(2);
+
+                            var statItem = new StatItem(verb, correct, incorrect);
+                            result.Add(statItem);
                         }
                     }
                 }
             }
-            return ans;
+            return result;
         }
 
         public static async Task UpdateUserRating()
@@ -66,7 +71,11 @@ namespace OssetianVerbsTelegramBot
             {
                 await conn.OpenAsync();
 
-                using (SqliteCommand cmd = new SqliteCommand($"SELECT Id, Name, DailyScore, WeeklyScore, MonthlyScore FROM Users", conn))
+                string sql = @"
+                    SELECT s.Id, u.Name, s.Daily, s.Weekly, s.Monthly 
+                    FROM Score s
+                    JOIN Users u ON s.Id = u.Id";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     SqliteDataReader reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
@@ -78,57 +87,90 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
+        /// <summary>
+        /// Заносит данные с кэша в Базу Данных и очищает из кэше пользователя
+        /// </summary>
         public static async Task FillStat(string id)
         {
-            var list = tempStat[id].OrderByDescending(item => item.Percent).ThenByDescending(item => item.Count).ThenByDescending(item => item.RightCount).ToList();
+            var stats = tempStat[id];
             tempStat.Remove(id);
-            var ans = "";
-            foreach (var item in list)
-                ans += item.ToString() + "&";
 
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 await conn.OpenAsync();
-                using (SqliteCommand cmd = new SqliteCommand())
+
+                foreach (var stat in stats)
                 {
-                    cmd.CommandText = $"Update Users Set Stat = '{ans}', DailyScore = DailyScore + {tempScore[id]}, WeeklyScore = WeeklyScore + {tempScore[id]}, MonthlyScore = MonthlyScore + {tempScore[id]} WHERE Id = '{id}'";
-                    cmd.Connection = conn;
-                    await cmd.ExecuteNonQueryAsync();
+                    string sql =
+                        $@"INSERT INTO UsersWordStatistic (UserId, Verb, Correct, Incorrect, TotalCount)
+                        VALUES ('{id}', '{stat.Verb}', {stat.CorrectCount}, {stat.IncorrectCount}, {stat.TotalCount})
+                        ON CONFLICT(UserId, Verb) DO UPDATE SET
+                            Correct = excluded.Correct,
+                            Incorrect = excluded.Incorrect,
+                            TotalCount = excluded.TotalCount";
+
+                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
         }
+
+
+        public static async Task FillScore(string id)
+        {
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
+            {
+                await conn.OpenAsync();
+
+                string sql =
+                     $@"INSERT OR REPLACE INTO Score (Id, Daily, Weekly, Monthly)
+                VALUES (
+                    '{id}', 
+                    COALESCE((SELECT Daily + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]}),
+                    COALESCE((SELECT Weekly + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]}),
+                    COALESCE((SELECT Monthly + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]})
+                )";
+
+
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+        }
+
+        //начинает записывать статистику в кэш
         public static async Task StartStatUpdate(string id)
         {
             tempStat[id] = await GetUserStatById(id);
             tempScore[id] = 0;
         }
-        public static async Task UpdateUserStat(string id, string verb, bool IsError)
+
+
+        /// <summary>
+        /// Обновить статистику в кэше (не в базе данных)
+        /// </summary>
+        public static async Task UpdateUserStatistic(string id, string verb, bool isRight)
         {
-            if (tempStat[id].FirstOrDefault(item => item.Verb == verb) == null)
+            var stats = tempStat[id];
+            var verbStat = stats.FirstOrDefault(item => item.Verb == verb);
+            if (verbStat != null)
             {
-                if (IsError)
-                    tempStat[id].Add(new StatItem(verb, "0", "1"));
+                if (isRight)
+                    verbStat.IncrementRightCount();
                 else
-                {
-                    tempStat[id].Add(new StatItem(verb, "1", "1"));
-                    tempScore[id] += 10 + StreakMultiplier(id);
-                }
+                    verbStat.IncrementIncorrectCount();
             }
             else
-            {
-                if (IsError)
-                    tempStat[id].First(item => item.Verb == verb).IncrementCount();
-                else
-                {
-                    tempStat[id].First(item => item.Verb == verb).IncrementRightCount();
-                    tempScore[id] += 10 + StreakMultiplier(id);
-                }
-            }
+                stats.Add(new StatItem(verb, isRight));
+
+            if (isRight)
+                tempScore[id] += 10; //+ StreakMultiplier(id);
         }
-        static private int StreakMultiplier(string id)
-        {
-            return tempStreak[id] >= 50 ? 100 : tempStreak[id] * 2;
-        }
+
         static public async Task InitialiseUser(Message msg)
         {
             if (!IsExistUser(msg.Chat.Id))
@@ -140,7 +182,8 @@ namespace OssetianVerbsTelegramBot
                     await conn.OpenAsync();
                     using (SqliteCommand cmd = new SqliteCommand())
                     {
-                        cmd.CommandText = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date]) VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}', '', '{date}')";
+                        cmd.CommandText = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date])" +
+                            $" VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}', '', '{date}')";
                         cmd.Connection = conn;
                         await cmd.ExecuteNonQueryAsync();
                     }

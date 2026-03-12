@@ -30,6 +30,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         {
             await bot.SendMessage(chatId, $"Вы закончили тест, количество правильных ответов: {_session.Score}/{_session.CurrentIndex}");
             await DbUser.FillStat(chatId.ToString());
+            await DbUser.FillScore(chatId.ToString());
             BotHandler.RemoveTaskSession(_session);
         }
 
@@ -62,7 +63,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         protected virtual async Task HandleCorrectAnswer()
         {
             _session.Score++;
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
             await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 
         }

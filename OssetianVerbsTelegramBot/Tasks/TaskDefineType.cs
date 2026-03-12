@@ -61,7 +61,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         protected override async Task HandleIncorrectAnswer()
         {
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
             var type = _session.Verbs[_session.CurrentIndex].Type == 1 ? "тип 1 (переходный)" : "тип 2 (непереходный)";
             await bot.SendMessage(chatId, "Неверно! Это " + type);
         }
