@@ -25,25 +25,31 @@ namespace OssetianVerbsTelegramBot.Tasks
         public async Task HandleMessageAnswer(Message message)
         {
             var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
-
-            string msgText = message.Text.ToLower();
+            Console.WriteLine(_session.Verbs.Count);
+            string msgText = message.Text.ToLower().Trim();
             if (rightAns.Contains(","))
             {
                 var temp = rightAns.Split(", ");
-                for (int i = 0; i < temp.Length; i++)
-                {
+                var isRight = false;
+
+                for (int i = 0; i < temp.Count(); i++)
                     if (msgText == temp[i])
                     {
-                        _session.Score++;
-                        await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, true);
-                        await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
+                        isRight = true;
                         break;
                     }
-                    if (i==temp.Count()-1)
-                    {
-                        await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
-                        await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
-                    }
+
+                if(isRight)
+                    await HandleCorrectAnswer();
+                else
+                {
+                    await HandleIncorrectAnswer();
+                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
+                    var mistake = msgText.Split();
+                    if(mistake.Count()==1)
+                        await DbUser.SaveVerbMistake(inf, msgText);
+                    else
+                        await DbUser.SaveVerbMistake(inf, mistake[1]);
                 }
             }
             else
@@ -51,10 +57,18 @@ namespace OssetianVerbsTelegramBot.Tasks
                 if (msgText == rightAns)
                 {
                     await HandleCorrectAnswer();
+                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
+                    await DbUser.SaveVerbMistake(inf, msgText);
                 }
                 else
                 {
                     await HandleIncorrectAnswer();
+                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
+                    var mistake = msgText.Split();
+                    if (mistake.Count() == 1)
+                        await DbUser.SaveVerbMistake(inf, msgText);
+                    else
+                        await DbUser.SaveVerbMistake(inf, mistake[1]);
                 }
             }
             _session.CurrentIndex++;
@@ -70,6 +84,8 @@ namespace OssetianVerbsTelegramBot.Tasks
             var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
             await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
             await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
+
+
 
         }
 

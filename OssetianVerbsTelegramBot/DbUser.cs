@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OssetianVerbsTelegramBot
 {
@@ -29,7 +30,7 @@ namespace OssetianVerbsTelegramBot
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 await conn.OpenAsync();
-                string sql = "SELECT Id FROM Users";
+                string sql = "SELECT id FROM users";
                 SqliteCommand command = new SqliteCommand(sql, conn);
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
@@ -42,8 +43,8 @@ namespace OssetianVerbsTelegramBot
             var result = new List<StatItem> { };
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
-                string sql = $"SELECT Verb, Correct, Incorrect FROM UsersWordStatistic WHERE UserId = {id} " +
-                    $"ORDER BY Correct DESC";
+                string sql = $"SELECT verb, correct, incorrect FROM user_test_statistics WHERE user_id = {id} " +
+                    $"ORDER BY correct DESC";
                 await conn.OpenAsync();
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
@@ -72,9 +73,9 @@ namespace OssetianVerbsTelegramBot
                 await conn.OpenAsync();
 
                 string sql = @"
-                    SELECT s.Id, u.Name, s.Daily, s.Weekly, s.Monthly 
-                    FROM Score s
-                    JOIN Users u ON s.Id = u.Id";
+                    SELECT s.user_id, u.name, s.daily, s.weekly, s.monthly 
+                    FROM user_scores s
+                    JOIN users u ON s.user_id = u.id";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     SqliteDataReader reader = await cmd.ExecuteReaderAsync();
@@ -102,12 +103,12 @@ namespace OssetianVerbsTelegramBot
                 foreach (var stat in stats)
                 {
                     string sql =
-                        $@"INSERT INTO UsersWordStatistic (UserId, Verb, Correct, Incorrect, TotalCount)
+                        $@"INSERT INTO user_test_statistics (user_id, verb, correct, incorrect, total_count)
                         VALUES ('{id}', '{stat.Verb}', {stat.CorrectCount}, {stat.IncorrectCount}, {stat.TotalCount})
-                        ON CONFLICT(UserId, Verb) DO UPDATE SET
-                            Correct = excluded.Correct,
-                            Incorrect = excluded.Incorrect,
-                            TotalCount = excluded.TotalCount";
+                        ON CONFLICT(user_id, verb) DO UPDATE SET
+                            correct = excluded.correct,
+                            incorrect = excluded.incorrect,
+                            total_count = excluded.total_count";
 
                     using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                     {
@@ -125,12 +126,12 @@ namespace OssetianVerbsTelegramBot
                 await conn.OpenAsync();
 
                 string sql =
-                     $@"INSERT OR REPLACE INTO Score (Id, Daily, Weekly, Monthly)
+                     $@"INSERT OR REPLACE INTO user_scores (user_id, daily, weekly, monthly)
                 VALUES (
                     '{id}', 
-                    COALESCE((SELECT Daily + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]}),
-                    COALESCE((SELECT Weekly + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]}),
-                    COALESCE((SELECT Monthly + {tempScore[id]} FROM Score WHERE Id = '{id}'), {tempScore[id]})
+                    COALESCE((SELECT daily + {tempScore[id]} FROM user_scores WHERE user_id = '{id}'), {tempScore[id]}),
+                    COALESCE((SELECT weekly + {tempScore[id]} FROM user_scores WHERE user_id = '{id}'), {tempScore[id]}),
+                    COALESCE((SELECT monthly + {tempScore[id]} FROM user_scores WHERE user_id = '{id}'), {tempScore[id]})
                 )";
 
 
@@ -180,13 +181,28 @@ namespace OssetianVerbsTelegramBot
                 using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     await conn.OpenAsync();
-                    using (SqliteCommand cmd = new SqliteCommand())
+                    var sql = $"INSERT INTO users ([id], [name], [date])" +
+                            $" VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}','{date}')";
+                    using (SqliteCommand cmd = new SqliteCommand(sql,conn))
                     {
-                        cmd.CommandText = $"INSERT INTO[Users] ([Id], [Name], [Stat], [Date])" +
-                            $" VALUES('{msg.Chat.Id}','{msg.From?.FirstName ?? "undefined"}', '', '{date}')";
-                        cmd.Connection = conn;
                         await cmd.ExecuteNonQueryAsync();
                     }
+                }
+            }
+        }
+
+        static public async Task SaveVerbMistake(string verb, string mistake)
+        {
+            using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
+            {
+                await conn.OpenAsync();
+                var sql = $@"INSERT INTO mistakes (verb, mistake, count) 
+                            VALUES ('{verb}', '{mistake}', 1)
+                            ON CONFLICT(verb, mistake) DO UPDATE SET 
+                                count = count + 1;";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }

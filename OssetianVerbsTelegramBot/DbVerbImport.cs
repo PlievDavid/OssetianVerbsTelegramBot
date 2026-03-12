@@ -26,7 +26,7 @@ namespace OssetianVerbsTelegramBot
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
                 await conn.OpenAsync();
-                using (SqliteCommand command = new SqliteCommand("SELECT * FROM Verbs", conn))
+                using (SqliteCommand command = new SqliteCommand("SELECT * FROM verbs", conn))
                 {
                     SqliteDataReader reader = await command.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
