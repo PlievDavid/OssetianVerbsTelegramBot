@@ -20,9 +20,9 @@ namespace OssetianVerbsTelegramBot
         public static Sentence GetRandomSentenceByVerbInf(string verbInf)
         {
             var sorted = AllSentences.Where(x => x.VerbInf == verbInf).ToList();
-            return sorted[Random.Shared.Next(0,sorted.Count)];
+            return sorted[Random.Shared.Next(0, sorted.Count)];
         }
-        public static  List<Sentence> GetRandomListSentence(int count = 10)
+        public static List<Sentence> GetRandomListSentence(int count = 10)
         {
             var allCount = AllSentences.Count;
             var list = new List<Sentence>();
@@ -43,8 +43,8 @@ namespace OssetianVerbsTelegramBot
         }
         public static List<Sentence> GetRandomListSentenceByListVerb(List<Verb> verbs)
         {
-            var list = new List<Sentence>();
-            foreach(var verb in verbs)
+            List<Sentence> list = new();
+            foreach (var verb in verbs)
             {
                 list.Add(GetRandomSentenceByVerbInf(verb.Inf));
             }
@@ -53,18 +53,18 @@ namespace OssetianVerbsTelegramBot
 
         public static async Task<List<Sentence>> GetAllSentences()
         {
-            var ans = new List<Sentence> { };
+            List<Sentence> ans = new();
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
-                conn.Open();
-                string sql = "SELECT * FROM Sentences";
-                SqliteCommand command = new SqliteCommand(sql, conn);
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                await conn.OpenAsync();
+                using (SqliteCommand command = new SqliteCommand("SELECT * FROM sentences", conn))
                 {
-                    ans.Add(new Sentence(reader[1].ToString()!, reader[2].ToString()!, reader[3].ToString()!));
+                    SqliteDataReader reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        ans.Add(new Sentence(reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+                    }
                 }
-                conn.Close();
             }
             return ans;
         }

@@ -9,15 +9,11 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace OssetianVerbsTelegramBot
 {
-    public class CommandHandler
+    public class CommandHandler(TelegramBotClient bot, MessageHelper msgh)
     {
-        public TelegramBotClient _bot;
-        public MessageHelper messageHelper;
-        public CommandHandler(TelegramBotClient bot, MessageHelper msgh)
-        {
-            _bot = bot;
-            messageHelper = msgh;
-        }
+        public TelegramBotClient bot = bot;
+        public MessageHelper messageHelper = msgh;
+
         public bool IsCommand(Message msg)
         {
             var command = msg.Text?.Trim();
@@ -46,13 +42,13 @@ namespace OssetianVerbsTelegramBot
                     if (!Int64.TryParse(commandSplit[1], out long recieverId)) return;
                     if(!DbUser.allUsersId.Contains(recieverId))
                     {
-                        await _bot.SendMessage(chatId, "Пользователь не зарегистрирован в боте");
+                        await bot.SendMessage(chatId, "Пользователь не зарегистрирован в боте");
                         return;
                     }
 
                     var msgToSend = string.Join(" ", commandSplit[2..]);
-                    await _bot.SendMessage(recieverId, $"Сообщение от модератора:\n{msgToSend}");
-                    await _bot.SendMessage(chatId, "Сообщение отправлено!");
+                    await bot.SendMessage(recieverId, $"Сообщение от модератора:\n{msgToSend}");
+                    await bot.SendMessage(chatId, "Сообщение отправлено!");
                     return;
             }
 

@@ -13,7 +13,7 @@ namespace OssetianVerbsTelegramBot
     public static class DbVerbImport
     {
         public static readonly string dbPath = Path.Combine(AppContext.BaseDirectory, "VerbsDb.db");
-        public static List<Verb> AllVerbs { get; private set; }
+        public static List<Verb> AllVerbs { get; private set; } = new();
 
         public static async Task InitializeVerbs() => AllVerbs = await GetAllVerbs();
         public static List<Verb> GetAllFirstTypeVerbs() => AllVerbs.Where(verb => verb.Type == 1).ToList();
@@ -22,16 +22,17 @@ namespace OssetianVerbsTelegramBot
 
         static async Task<List<Verb>> GetAllVerbs()
         {
-            var ans = new List<Verb>{ };
+            List<Verb> ans = new();
             using (SqliteConnection conn = new SqliteConnection($"Data Source={dbPath}"))
             {
-                conn.Open();
-                string sql = "SELECT * FROM Verbs";
-                SqliteCommand command = new SqliteCommand(sql, conn);
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                    ans.Add(new Verb(reader[0].ToString(), reader[1].ToString(), int.Parse(reader[2].ToString()), reader[3].ToString()));
-                conn.Close();
+                await conn.OpenAsync();
+                using (SqliteCommand command = new SqliteCommand("SELECT * FROM verbs", conn))
+                {
+                    SqliteDataReader reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                        ans.Add(new Verb(reader.GetString(0), reader.GetString(1), reader.GetInt32(2), reader.GetString(3)));
+                    conn.Close();
+                }
             }
             return ans;
         }

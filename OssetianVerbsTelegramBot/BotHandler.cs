@@ -15,23 +15,15 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OssetianVerbsTelegramBot
 {
-    public class BotHandler
+    public class BotHandler(TelegramBotClient bot, MessageHelper messageHelper, CommandHandler commandHandler, ChatBot chatBot)
     {
 
-        readonly TelegramBotClient bot;
-        readonly MessageHelper messageHelper;
-        readonly CommandHandler commandHandler;
-        readonly ChatBot chatBot;
+        readonly TelegramBotClient bot = bot;
+        readonly MessageHelper messageHelper = messageHelper;
+        readonly CommandHandler commandHandler = commandHandler;
+        readonly ChatBot chatBot = chatBot;
 
         public static Dictionary<long, TestSession> _taskSessions = new();
-        public BotHandler(TelegramBotClient bot,MessageHelper messageHelper,CommandHandler commandHandler, ChatBot chatBot)
-        {
-            this.bot = bot;
-            this.messageHelper = messageHelper;
-            this.commandHandler = commandHandler;
-            this.chatBot = chatBot;
-        }
-
 
         public async Task Start()
         {
@@ -40,6 +32,7 @@ namespace OssetianVerbsTelegramBot
             await DbUser.InitializeAllUsers();
 
             bot.StartReceiving(UpdateHandler, ErrorHandler);
+            ScoreResetService.Start();
             Console.WriteLine("Бот запущен!");
 
 
@@ -59,7 +52,7 @@ namespace OssetianVerbsTelegramBot
             }
             else if (update.Type == UpdateType.CallbackQuery)
             {
-                await HandleCallbackQuery(update.CallbackQuery);
+                await HandleCallbackQuery(update.CallbackQuery!);
             }
         }
 
@@ -74,7 +67,7 @@ namespace OssetianVerbsTelegramBot
                 if (!chatBot.ContainsUser(chatId))
                     chatBot.CreateSession(chatId);
 
-                if (messageHelper.helpMessages.ContainsKey(chatId))
+                if (messageHelper.messagesToDelete.ContainsKey(chatId))
                     await messageHelper.SafeDeleteHelpMessages(chatId);
 
 
@@ -110,9 +103,11 @@ namespace OssetianVerbsTelegramBot
                             ITaskState taskDeclination = new TaskDeclination(bot);
                             await taskDeclination.StartTask(message);
                             break;
-
                         case "⚙️ Статистика":
                             await messageHelper.SendStatistics(chatId);
+                            break;
+                        case "🏆 Рейтинг":
+                            await messageHelper.SendRating(chatId,message.Id);
                             break;
 
                         case "💡 Справка":
@@ -179,17 +174,22 @@ namespace OssetianVerbsTelegramBot
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             await bot.AnswerCallbackQuery(callbackQuery.Id);
-            var chatId = callbackQuery.Message.Chat.Id;
             var callBackData = callbackQuery.Data;
 
             if (callBackData == null) return;
 
+            var chatId = callbackQuery!.Message!.Chat.Id;
+            if (callBackData.ToLower().Contains("ratingid"))
+            {
+                await messageHelper.HandleCallbackQuery(callbackQuery);
+                return;
+            }
+
+            if (callBackData.Contains("oldbutton"))
+                return;
+
             if (!_taskSessions.ContainsKey(chatId))
                 return;
-
-            if (callBackData.ToLower().Contains("oldbutton"))
-                return;
-
             var task = _taskSessions[chatId].Task;
             if (task is ICallBackTask taskCallBack)
                 await taskCallBack.HandleCallbackQuery(callbackQuery);
@@ -233,7 +233,7 @@ namespace OssetianVerbsTelegramBot
             return Task.CompletedTask;
         }
 
-        public static async void AddNewTaskSession(long chatId, TestSession test)
+        public static async void SetNewTaskSession(long chatId, TestSession test)
         {
             _taskSessions[chatId] = test;
         }

@@ -25,8 +25,8 @@ internal class Program
         services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetTestBotToken()));
 
 #else
-        services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetBotToken()));
-        
+                services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetBotToken()));
+
 #endif
         var serviceProvider = services.BuildServiceProvider();
         var botHandler = serviceProvider.GetRequiredService<BotHandler>();

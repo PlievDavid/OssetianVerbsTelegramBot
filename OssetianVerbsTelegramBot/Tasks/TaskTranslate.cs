@@ -24,7 +24,7 @@ namespace OssetianVerbsTelegramBot.Tasks
                     new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, "translateAns:"+twoVerbs[1 - randomNum].Trans));
 
 
-            await _bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public  async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -56,8 +56,8 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         protected override async Task HandleIncorrectAnswer()
         {
-            await DbUser.UpdateUserStat(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
-            await _bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
+            await bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
         }
     }
 }

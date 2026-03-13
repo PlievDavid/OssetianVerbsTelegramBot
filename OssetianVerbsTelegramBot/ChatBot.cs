@@ -11,18 +11,13 @@ using Telegram.Bot.Types.Enums;
 
 namespace OssetianVerbsTelegramBot
 {
-    public class ChatBot
+    public class ChatBot(TelegramBotClient bot)
     {
-        private readonly TelegramBotClient bot;
+        private readonly TelegramBotClient bot = bot;
         private readonly YandexTranslateClient yandexTranslateClient = new YandexTranslateClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
         private readonly YandexGptClient yandexGptClient = new YandexGptClient(EnvironmentManager.GetYandexGptKey(), EnvironmentManager.GetYandexProjectId());
 
         private Dictionary<long, ChatSession> chatSessions = new();
-
-        public ChatBot(TelegramBotClient bot)
-        {
-            this.bot = bot;
-        }
 
         public async Task HandleMessage(Message message)
         {
