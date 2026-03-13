@@ -12,9 +12,9 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace OssetianVerbsTelegramBot.Tasks
 {
-    internal class TaskDeclination: BaseTask, IMessageTask
+    internal class TaskDeclination : BaseTask, IMessageTask
     {
-        public TaskDeclination(TelegramBotClient bot):base(bot) { }
+        public TaskDeclination(TelegramBotClient bot) : base(bot) { }
         public override async Task SendNextQuestion()
         {
             var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(_session.Verbs[_session.CurrentIndex].Inf);
@@ -24,53 +24,26 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         public async Task HandleMessageAnswer(Message message)
         {
-            var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
-            Console.WriteLine(_session.Verbs.Count);
-            string msgText = message.Text.ToLower().Trim();
-            if (rightAns.Contains(","))
-            {
-                var temp = rightAns.Split(", ");
-                var isRight = false;
+            var rightAnswers = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
+            string userAnswer = message.Text.ToLower().Trim();
+            var isRight = false;
 
-                for (int i = 0; i < temp.Count(); i++)
-                    if (msgText == temp[i])
-                    {
-                        isRight = true;
-                        break;
-                    }
+            isRight = rightAnswers.Split(", ").Contains(userAnswer);
 
-                if(isRight)
-                    await HandleCorrectAnswer();
-                else
-                {
-                    await HandleIncorrectAnswer();
-                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
-                    var mistake = msgText.Split();
-                    if(mistake.Count()==1)
-                        await DbUser.SaveVerbMistake(inf, msgText);
-                    else
-                        await DbUser.SaveVerbMistake(inf, mistake[1]);
-                }
-            }
+            if (isRight)
+                await HandleCorrectAnswer();
             else
             {
-                if (msgText == rightAns)
-                {
-                    await HandleCorrectAnswer();
-                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
-                    await DbUser.SaveVerbMistake(inf, msgText);
-                }
+                await HandleIncorrectAnswer();
+
+                var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
+                var mistake = userAnswer.Split();
+                if (mistake.Count() == 1)
+                    await DbUser.SaveVerbMistake(inf, userAnswer);
                 else
-                {
-                    await HandleIncorrectAnswer();
-                    var inf = _session.Sentences[_session.CurrentIndex].VerbInf;
-                    var mistake = msgText.Split();
-                    if (mistake.Count() == 1)
-                        await DbUser.SaveVerbMistake(inf, msgText);
-                    else
-                        await DbUser.SaveVerbMistake(inf, mistake[1]);
-                }
+                    await DbUser.SaveVerbMistake(inf, mistake[1]);
             }
+
             _session.CurrentIndex++;
 
             if (_session.CurrentIndex < _session.Verbs.Count)
