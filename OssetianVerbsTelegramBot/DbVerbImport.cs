@@ -51,7 +51,7 @@ namespace OssetianVerbsTelegramBot
             {
                 if (Random.Shared.Next(0, 3) == 0)
                 {
-                    smartRandomVerbs.Add(AllVerbs.First(x => x.Inf == verb.Verb));
+                    smartRandomVerbs.Add(AllVerbs.First(x => x.Infinitive == verb.Verb));
                     count--;
 
                     if (count <= 0)

@@ -8,16 +8,16 @@ namespace OssetianVerbsTelegramBot.Models
 {
     public class Verb
     {
-        public string Inf { get; private set; }
+        public string Infinitive { get; private set; }
         public string Past { get; private set; }
         public int Type { get; private set; }
-        public string Trans { get; private set; }
+        public string Translation { get; private set; }
         public Verb(string inf, string past, int type, string trans)
         {
-            Inf = inf;
+            Infinitive = inf;
             Past = past;
             Type = type;
-            Trans = trans;
+            Translation = trans;
         }
     }
 }

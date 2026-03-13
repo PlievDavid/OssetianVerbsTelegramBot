@@ -20,11 +20,11 @@ namespace OssetianVerbsTelegramBot.Tasks
             int randomNum = Random.Shared.Next(1, 25) % 2;
             InlineKeyboardMarkup answers =
                 new InlineKeyboardMarkup(
-                    new InlineKeyboardButton(twoVerbs[randomNum].Trans, "translateAns:"+twoVerbs[randomNum].Trans), 
-                    new InlineKeyboardButton(twoVerbs[1 - randomNum].Trans, "translateAns:"+twoVerbs[1 - randomNum].Trans));
+                    new InlineKeyboardButton(twoVerbs[randomNum].Translation, "translateAns:"+twoVerbs[randomNum].Translation), 
+                    new InlineKeyboardButton(twoVerbs[1 - randomNum].Translation, "translateAns:"+twoVerbs[1 - randomNum].Translation));
 
 
-            await bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Inf}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            await bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10 \n\nПереведите слово на русский язык: <b>{verb.Infinitive}</b>", replyMarkup: answers, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public  async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -35,7 +35,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
             var answer = callbackData.Split(':')[1];
 
-            if (answer == _session.Verbs[_session.CurrentIndex].Trans)
+            if (answer == _session.Verbs[_session.CurrentIndex].Translation)
             {
                 await UpdateOldMessageCallback(callbackQuery, true);
                 await HandleCorrectAnswer();
@@ -56,8 +56,8 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         protected override async Task HandleIncorrectAnswer()
         {
-            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
-            await bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Trans);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Infinitive, false);
+            await bot.SendMessage(chatId, "Неверно! Правильно: " + _session.Verbs[_session.CurrentIndex].Translation);
         }
     }
 }

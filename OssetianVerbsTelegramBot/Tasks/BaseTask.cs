@@ -63,7 +63,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         protected virtual async Task HandleCorrectAnswer()
         {
             _session.Score++;
-            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, true);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Infinitive, true);
             await bot.SendMessage(chatId, ComplimentGenerator.GetRandomCompliment());
                 
         }

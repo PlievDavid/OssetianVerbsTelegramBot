@@ -25,7 +25,7 @@ namespace OssetianVerbsTelegramBot.Tasks
             });
             await bot.SendMessage(
                 chatId,
-                $"№{_session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Inf}</b>",
+                $"№{_session.CurrentIndex + 1}/10\n\nОпределите тип глагола: <b>{verb.Infinitive}</b>",
                 replyMarkup: keyboard,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
             );
@@ -61,7 +61,7 @@ namespace OssetianVerbsTelegramBot.Tasks
 
         protected override async Task HandleIncorrectAnswer()
         {
-            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Inf, false);
+            await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Verbs[_session.CurrentIndex].Infinitive, false);
             var type = _session.Verbs[_session.CurrentIndex].Type == 1 ? "тип 1 (переходный)" : "тип 2 (непереходный)";
             await bot.SendMessage(chatId, "Неверно! Это " + type);
         }

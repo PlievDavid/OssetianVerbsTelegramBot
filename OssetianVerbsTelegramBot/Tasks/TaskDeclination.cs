@@ -17,7 +17,7 @@ namespace OssetianVerbsTelegramBot.Tasks
         public TaskDeclination(TelegramBotClient bot) : base(bot) { }
         public override async Task SendNextQuestion()
         {
-            var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(_session.Verbs[_session.CurrentIndex].Inf);
+            var sentence = DbSentencesImport.GetRandomSentenceByVerbInf(_session.Verbs[_session.CurrentIndex].Infinitive);
             _session.Sentences.Add(sentence);
             await bot.SendMessage(chatId, $"№{_session.CurrentIndex + 1}/10\n\nПереведите предложение: <b>{sentence.Russian}</b>", parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
@@ -57,9 +57,6 @@ namespace OssetianVerbsTelegramBot.Tasks
             var rightAns = _session.Sentences[_session.CurrentIndex].Ossetian.ToLower();
             await DbUser.UpdateUserStatistic(chatId.ToString(), _session.Sentences[_session.CurrentIndex].VerbInf, false);
             await bot.SendMessage(chatId, "Неверно! Правильно: " + rightAns);
-
-
-
         }
 
         protected override async Task HandleCorrectAnswer()

@@ -1,4 +1,5 @@
 ﻿using OssetianVerbsTelegramBot.Models;
+using Sprache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,13 @@ namespace OssetianVerbsTelegramBot
     public class MessageHelper(TelegramBotClient bot)
     {
         TelegramBotClient bot = bot;
-
+        //Геор        Давид       Алан     МД
         public long[] admins = { 946534275, 2033844706, 6242358847, 286858097 };
-                                          //Геор        Давид       Алан     МД
-        public long[] moderators = { 946534275 , 2033844706, 6242358847 };
+        public long[] moderators = { 946534275, 2033844706, 6242358847 };
+
         public HashSet<long> needFeedback = new();
         public Dictionary<long, List<int>> messagesToDelete = new();
+        private Dictionary<string, string> _cachedPhotos = new();
 
         public async Task SendAdminMenu(long chatId)
         {
@@ -142,7 +144,7 @@ namespace OssetianVerbsTelegramBot
             return new InlineKeyboardMarkup(buttons);
         }
 
-        
+
 
         private async Task SendRating(long id, Message msg, RatingType ratingType)
         {
@@ -161,14 +163,14 @@ namespace OssetianVerbsTelegramBot
             await bot.EditMessageReplyMarkup(id, msg.Id, replyMarkup: keyboard);
         }
 
-        private (string title, Func<RatingItem, int> scoreSelector ) GetRatingInfo(RatingType type)
+        private (string title, Func<RatingItem, int> scoreSelector) GetRatingInfo(RatingType type)
         {
-            
+
             return type switch
             {
                 RatingType.Daily => (
                     "Ежедневный рейтинг",
-                    u => u.DailyScore   
+                    u => u.DailyScore
                 ),
                 RatingType.Weekly => (
                     "Еженедельный рейтинг",
@@ -239,7 +241,7 @@ namespace OssetianVerbsTelegramBot
 
             switch (callbackQuery.Data?.Split(":")[1])
             {
-                case "1":await SendRating(chatId, msg, RatingType.Daily);break;
+                case "1": await SendRating(chatId, msg, RatingType.Daily); break;
                 case "2": await SendRating(chatId, msg, RatingType.Weekly); break;
                 case "3": await SendRating(chatId, msg, RatingType.Monthly); break;
             }
@@ -262,41 +264,73 @@ namespace OssetianVerbsTelegramBot
             await bot.SendMessage(message.Chat.Id, keyboardInformationString, replyMarkup: markup);
         }
 
+
+        public async Task<Message> SendPhotoCached(string imagePath, long id)
+        {
+
+            if (_cachedPhotos.TryGetValue(imagePath, out var fileId))
+            {
+                try
+                {
+                    return await bot.SendPhoto(id, fileId);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("SENDPHOTOCACHED:    " + ex.Message);
+                    _cachedPhotos.Remove(imagePath);
+                }
+            }
+
+            using (var stream = File.OpenRead(imagePath))
+            {
+                var photoMessage = await bot.SendPhoto(id, stream);
+
+                fileId = photoMessage.Photo.Last().FileId;
+                _cachedPhotos[imagePath] = fileId;
+
+                return photoMessage;
+            }
+
+        }
+
+
         public async Task SendHelp(long id, int msgId)
         {
-            var messageIds = new List<int>{ msgId };
             try
             {
+                var messageIds = new List<int> { msgId };
                 var imagePath = Path.Combine("Images", "declinationRule.jpg");
 
-                using (var imageFile = File.Open(imagePath, FileMode.Open, FileAccess.Read))
-                {
-                    var photoMessage = await bot.SendPhoto( id,imageFile, caption: "Правило спряжения глаголов в прошедшем времени.");
-                    messageIds.Add(photoMessage.MessageId);
-                }
                 var firstTypeVerbs = DbVerbImport.GetAllFirstTypeVerbs();
                 var secondTypeVerbs = DbVerbImport.GetAllSecondTypeVerbs();
 
                 var firstTypeText = new StringBuilder();
-                firstTypeText.AppendLine("<b>Переходные глаголы:</b>");
-                firstTypeText.AppendLine("<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>");
+                firstTypeText.AppendLine("<b>📚 Переходные глаголы:</b>\n");
+                firstTypeText.AppendLine("<b>Инфинитив</b> → <i>Прошедшее время</i> → Перевод");
+                firstTypeText.AppendLine("─────────────────────────────");
                 foreach (var verb in firstTypeVerbs)
                 {
-                    firstTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
+                    firstTypeText.AppendLine($"<b>{verb.Infinitive}</b>  →  {verb.Past}  →  {verb.Translation}");
                 }
-                var firstTypeMessage = await bot.SendMessage(id, firstTypeText.ToString(), parseMode: ParseMode.Html);
-                messageIds.Add(firstTypeMessage.MessageId);
-
+                
+                
                 var secondTypeText = new StringBuilder();
-                secondTypeText.AppendLine("<b>Непереходные глаголы:</b>");
-                secondTypeText.AppendLine("<i>Инфинитив - Морфема в прошедшем времени - Перевод</i>");
+                secondTypeText.AppendLine("<b>📗 Непереходные глаголы:</b>\n");
+                secondTypeText.AppendLine("<b>Инфинитив</b> → <i>Прошедшее время</i> → Перевод");
+                secondTypeText.AppendLine("─────────────────────────────");
                 foreach (var verb in secondTypeVerbs)
                 {
-                    secondTypeText.AppendLine($"{verb.Inf} - {verb.Past} - {verb.Trans}");
+                    secondTypeText.AppendLine($"<b>{verb.Infinitive}</b>  →  {verb.Past}  →  {verb.Translation}");
                 }
-                var secondTypeMessage = await bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
-                messageIds.Add(secondTypeMessage.MessageId);
 
+
+                var photomessage = await SendPhotoCached(imagePath, id);
+                var firstTypeMessage = await bot.SendMessage(id, firstTypeText.ToString(), parseMode: ParseMode.Html);
+                var secondTypeMessage = await bot.SendMessage(id, secondTypeText.ToString(), parseMode: ParseMode.Html);
+
+                messageIds.Add(firstTypeMessage.MessageId);
+                messageIds.Add(secondTypeMessage.MessageId);
+                messageIds.Add(photomessage.Id);
                 messagesToDelete[id] = messageIds;
             }
             catch (Exception ex)
@@ -304,14 +338,14 @@ namespace OssetianVerbsTelegramBot
                 Console.WriteLine($"Error sending help to user {id}: {ex.Message}");
             }
 
-            
+
 
         }
         public async Task SafeDeleteHelpMessages(long userId)
         {
             try
             {
-                await bot.DeleteMessages(userId,messagesToDelete[userId]);
+                await bot.DeleteMessages(userId, messagesToDelete[userId]);
                 messagesToDelete.Remove(userId);
             }
             catch
@@ -320,7 +354,7 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
-        public async Task SendReportToAllModerators(long reporterId,Message message)
+        public async Task SendReportToAllModerators(long reporterId, Message message)
         {
             foreach (var moder in moderators)
             {

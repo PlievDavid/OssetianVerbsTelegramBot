@@ -46,7 +46,7 @@ namespace OssetianVerbsTelegramBot
             List<Sentence> list = new();
             foreach (var verb in verbs)
             {
-                list.Add(GetRandomSentenceByVerbInf(verb.Inf));
+                list.Add(GetRandomSentenceByVerbInf(verb.Infinitive));
             }
             return list;
         }
