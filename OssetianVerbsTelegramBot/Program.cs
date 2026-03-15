@@ -7,7 +7,6 @@ using System.Net.NetworkInformation;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 internal class Program
 {
@@ -25,7 +24,7 @@ internal class Program
         services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetTestBotToken()));
 
 #else
-                services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetBotToken()));
+        services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(EnvironmentManager.GetBotToken()));
 
 #endif
         var serviceProvider = services.BuildServiceProvider();

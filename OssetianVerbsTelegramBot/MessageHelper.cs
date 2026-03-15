@@ -96,12 +96,8 @@ namespace OssetianVerbsTelegramBot
         public async Task SendStatistics(long id)
         {
             var list = await DbUser.GetUserStatById(id.ToString());
-            string textStatistics = "Статистика правильных ответов: \n";
-            foreach (var stat in list)
-            {
-                textStatistics += stat.ToString() + "\n";
-            }
-            await bot.SendMessage(id, textStatistics);
+            var textStatistics = FormatVerbStats(list);
+            await bot.SendMessage(id, textStatistics, parseMode: ParseMode.Markdown);
         }
 
 
@@ -354,13 +350,114 @@ namespace OssetianVerbsTelegramBot
             }
         }
 
+        public string FormatVerbStats(List<StatItem> stats)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("📊 *СТАТИСТИКА ГЛАГОЛОВ*\n");
+
+            // Группировка по успеваемости
+            var excellent = stats.Where(s => s.Percent >= 90).OrderByDescending(s => s.Percent);
+            var good = stats.Where(s => s.Percent >= 70 && s.Percent < 90).OrderByDescending(s => s.Percent);
+            var average = stats.Where(s => s.Percent >= 50 && s.Percent < 70).OrderByDescending(s => s.Percent);
+            var poor = stats.Where(s => s.Percent >= 30 && s.Percent < 50).OrderByDescending(s => s.Percent);
+            var bad = stats.Where(s => s.Percent < 30).OrderByDescending(s => s.Percent);
+
+            
+            if (excellent.Any())
+            {
+                sb.AppendLine("🌟 *Отлично усвоены:*");
+                foreach (var s in excellent)
+                {
+                    sb.AppendLine($"`{s.Verb,-12}` ({s.Percent}%)  {s.CorrectCount}/{s.TotalCount}");
+                    sb.AppendLine($"{GetProgressBar(s.Percent)}");
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            if (good.Any())
+            {
+                sb.AppendLine("👍 *Хорошо:*");
+                foreach (var s in good)
+                {
+                    sb.AppendLine($"`{s.Verb,-12}` ({s.Percent}%)  {s.CorrectCount}/{s.TotalCount}");
+                    sb.AppendLine($"{GetProgressBar(s.Percent)}");
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            if (average.Any())
+            {
+                sb.AppendLine("👌 *Средне:*");
+                foreach (var s in average)
+                {
+                    sb.AppendLine($"`{s.Verb,-12}` ({s.Percent}%)  {s.CorrectCount}/{s.TotalCount}");
+                    sb.AppendLine($"{GetProgressBar(s.Percent)}");
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            if (poor.Any())
+            {
+                sb.AppendLine("⚠️ *Нужно повторить:*");
+                foreach (var s in poor)
+                {
+                    sb.AppendLine($"`{s.Verb,-12}` ({s.Percent}%)  {s.CorrectCount}/{s.TotalCount}");
+                    sb.AppendLine($"{GetProgressBar(s.Percent)}");
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            if (bad.Any())
+            {
+                sb.AppendLine("🔴 *Требуют внимания:*");
+                foreach (var s in bad)
+                {
+                    sb.AppendLine($"`{s.Verb,-12}` ({s.Percent}%)  {s.CorrectCount}/{s.TotalCount}");
+                    sb.AppendLine($"{GetProgressBar(s.Percent)}");
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        private string GetProgressBar(int percent, int length = 10)
+        {
+            int filled = (int)Math.Round(percent / 100.0 * length);
+
+            //string emoji = percent switch
+            //{
+            //    >= 80 => "🟢",  // отлично - зеленый
+            //    >= 50 => "🟡",  // хорошо - желтый
+            //    >= 30 => "🟠",  // средне - оранжевый
+            //    >= 10 => "🔴",  // плохо - красный
+            //    _ => "⭕"       // очень плохо - пустой красный круг
+            //};
+            string emoji = percent switch
+            {
+                >= 80 => "🟩",  // отлично - зеленый
+                >= 35 => "🟨",  // хорошо - желтый
+                _ => "🟥",  // плохо - красный
+            };
+
+            string filledPart = string.Concat(Enumerable.Repeat(emoji, filled));
+            string emptyPart = string.Concat(Enumerable.Repeat("⬜️", length - filled));
+
+            return filledPart + emptyPart;
+        }
+
         public async Task SendReportToAllModerators(long reporterId, Message message)
         {
             foreach (var moder in moderators)
             {
                 await bot.SendMessage(moder, $"🆘 Вам поступило новое обращение\n" +
                     $"Отправитель: {reporterId}  @{message?.From?.Username ??
-                    message?.From?.FirstName ?? "скрыл юзернейм"} :\n" + message?.Text);
+                    message?.From?.FirstName ?? "undefined"} :\n" + message?.Text);
             }
             await bot.SendMessage(reporterId, "Ваше обращение было успешно доставлено, ожидайте ответа!");
 
